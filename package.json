@@ -1,0 +1,28 @@
+{
+  "name": "clock-in_server",
+  "version": "1.0.0",
+  "description": "Server for DIPC's clock-in app",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/username/repository.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "api",
+    "clock-in",
+    "json.ldap"
+  ],
+  "author": "Urko Lekuona",
+  "license": "ISC",
+  "dependencies": {
+    "cookie-parser": "^1.4.4",
+    "express": "^4.17.1",
+    "file-system": "^2.2.2",
+    "jsonwebtoken": "^8.5.1",
+    "passport": "^0.4.0",
+    "passport-ldapauth": "^2.1.3"
+  }
+}
