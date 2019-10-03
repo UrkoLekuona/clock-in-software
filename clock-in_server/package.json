@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "description": "Server for DIPC's clock-in app",
   "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/username/repository.git"
-  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

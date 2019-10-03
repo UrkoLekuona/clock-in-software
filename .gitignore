@@ -1,3 +1,7 @@
+# Vagrant
+.vag*
+.Vag*
+
 # Key files
 *.key*
 
