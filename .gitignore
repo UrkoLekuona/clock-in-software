@@ -1,3 +1,9 @@
+# Other files
+mysql_secure.sh
+
+# DB dump files
+*.sql
+
 # Vagrant
 .vag*
 .Vag*

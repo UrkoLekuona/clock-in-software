@@ -79,9 +79,9 @@ Vagrant.configure("2") do |config|
  
     # Server installation
     mkdir /opt/clock-in_server/
-    chown vagrant:vagrant /opt/clock-in_server/
     cp -aR /vagrant/clock-in_server/* /opt/clock-in_server/
     npm --prefix /opt/clock-in_server install /opt/clock-in_server --unsafe-perm
+    chown vagrant:vagrant /opt/clock-in_server/
 
     # Start and enable services
     systemctl start firewalld
@@ -96,5 +96,8 @@ Vagrant.configure("2") do |config|
     firewall-cmd --permanent --set-target=ACCEPT
     #  -> Reload firewall rules
     firewall-cmd --reload
+
+    # MySQL secure installation
+    mysql_secure_installation
     SHELL
 end

@@ -5,6 +5,8 @@ var express      = require('express'),
     cookieParser = require('cookie-parser'),
     jwt 	 = require('jsonwebtoken'),
     fs           = require('file-system'),
+    mariadb      = require('mariadb'),
+    pass_file    = require('./password.key.json'),
     LdapStrategy = require('passport-ldapauth');
 
 // LDAP strategy
@@ -20,16 +22,6 @@ var OPTS = {
 // App initialization
 var app = express();
 
-//
-/*
-passport.serializeUser(function(user, done) {
-  done(null, user);
-});
-
-passport.deserializeUser(function(user, done) {
-  done(null, user);
-});
-*/
 // Middleware initialization
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
@@ -37,11 +29,13 @@ app.use(cookieParser());
 app.use(passport.initialize());
 
 // Set bindCredentials to our LDAP strategy
-app.locals.ldap_pass = 'Tga!Fh7_';
-OPTS.server.bindCredentials = app.locals.ldap_pass;
+OPTS.server.bindCredentials = pass_file.ldap;
 
 // Assign our LDAP strategy to passport
 passport.use(new LdapStrategy(OPTS));
+
+// Mariadb pool
+const pool = mariadb.createPool({ host: 'localhost', user: 'noadmin', password: pass_file.mariadb, database: 'clocks' });
 
 //
 // From here onwards, app functionality begins
@@ -50,28 +44,49 @@ passport.use(new LdapStrategy(OPTS));
 // Function to call when the request is a clock-in attempt.
 // It will register the event in the database and answer
 // with a successful status
-function clockIn(req, res, next) {
-  res.send({ token: req.cookies.token  })
+function clockIn(decoded, req, res, next) {
+  var type = req.body.type;
+  if (type !== null && (type === 'in' || type === 'out')){
+    pool.getConnection().then(conn => {
+      return conn.query("INSERT INTO clock(user, type, date) VALUES(?,?,NOW())", [decoded.user, type]).then((dbres) => {
+        conn.end();
+        res.send({ status: 'ok' });
+      });
+    })
+    .catch(err => {
+      res.status(500).send({ error: err }).end();
+    });
+  } else {
+    res.status(400).send('Bad request').end();
+  }  
 }
 
 // Login attempt, using passport. If authentication succeeds, generate JWT token
 // and send it as a cookie, which will grant authorization for future requests
 app.post('/login', passport.authenticate('ldapauth', {session: false}), (req, res) => {
-  var privateKey = fs.readFileSync('jwtRS256.key');
-  res.cookie('token', jwt.sign({ user: 'user' }, privateKey, { algorithm: 'RS256', expiresIn: '1h' })).send({ status: 'logged' });
+  var privateKey = fs.readFileSync('jwtRS256.key', 'utf8');
+  pool.getConnection().then(conn => {
+    return conn.query("INSERT IGNORE INTO users VALUES(?)", req.body.username).then((dbres) => {
+      conn.end();
+    });
+  })
+  .catch(err => {
+    res.status(500).send({ error: err }).end();
+  });  
+  res.cookie('token', jwt.sign({ user: req.body.username }, privateKey, { algorithm: 'RS256', expiresIn: '1h' })).send({ status: 'logged' });
 });
 
 // A request is attempting to clock-in/out, verify if it has logged first
-// and redirect to corresponding function
 app.post('/clock', function(req, res, next) {
-  var publicKey = fs.readFileSync('jwtRS256.key.pub');
+  // JWT verification
+  var publicKey = fs.readFileSync('jwtRS256.key.pub', 'utf8');
   try {
     var decoded = jwt.verify(req.cookies.token, publicKey, { algorithms: ['RS256'] });
-    // TODO: check last clock type and store new clock, return success?    
-    clockIn(req, res, next);
   } catch(err) {
-    res.status(403).end(); 
+    res.status(403).send({ error: err });
+    res.end(); 
   }
+  clockIn(decoded, req, res, next);
 });
 
 // At this point, no other route has been matched so we assume 404
