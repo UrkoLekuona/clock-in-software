@@ -28,6 +28,9 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(passport.initialize());
 
+// Timezone
+process.env.TZ = 'Europe/Madrid';
+
 // Set bindCredentials to our LDAP strategy
 OPTS.server.bindCredentials = pass_file.ldap;
 
@@ -44,20 +47,26 @@ const pool = mariadb.createPool({ host: 'localhost', user: 'noadmin', password: 
 // Function to call when the request is a clock-in attempt.
 // It will register the event in the database and answer
 // with a successful status
-function clockIn(decoded, req, res, next) {
+function clock(decoded, req, res, next) {
   var type = req.body.type;
   if (type !== null && (type === 'in' || type === 'out')){
     pool.getConnection().then(conn => {
-      return conn.query("INSERT INTO clock(user, type, date) VALUES(?,?,NOW())", [decoded.user, type]).then((dbres) => {
+      conn.query("SELECT type, date FROM clock WHERE user=? AND date=(SELECT MAX(date) FROM clock WHERE user=?)", [decoded.user, decoded.user]).then((rows) => {
+        if (rows[0] === undefined || rows[0].type !== type) {
+          return conn.query("INSERT INTO clock(user, type, date) VALUES(?,?,NOW())", [decoded.user, type]).then((dbres) => {
+            res.send({ status: 'ok' });
+          });
+        } else {
+          res.status(400).send({ status: 'Bad request: same clock type as last time' }).end();
+        }
         conn.end();
-        res.send({ status: 'ok' });
-      });
+      }); 
     })
     .catch(err => {
       res.status(500).send({ error: err }).end();
     });
   } else {
-    res.status(400).send('Bad request').end();
+    res.status(400).send({ status: 'Bad request: Not a valid type' }).end();
   }  
 }
 
@@ -66,14 +75,23 @@ function clockIn(decoded, req, res, next) {
 app.post('/login', passport.authenticate('ldapauth', {session: false}), (req, res) => {
   var privateKey = fs.readFileSync('jwtRS256.key', 'utf8');
   pool.getConnection().then(conn => {
-    return conn.query("INSERT IGNORE INTO users VALUES(?)", req.body.username).then((dbres) => {
-      conn.end();
+    conn.query("INSERT IGNORE INTO users VALUES(?)", req.body.username).then((dbres) => {
+      conn.query("SELECT type, date FROM clock WHERE user=? AND date=(SELECT MAX(date) FROM clock WHERE user=?)", [req.body.username, req.body.username]).then((rows) => {
+        if (rows[0] === undefined) { 
+          type = 'none';
+          date = 'none';
+        } else {
+          type = rows[0].type;
+          date = rows[0].date;
+        }
+        res.cookie('token', jwt.sign({ user: req.body.username }, privateKey, { algorithm: 'RS256', expiresIn: '1h' })).send({ status: 'logged', type: type, date: date });      
+        conn.end();
+      });
     });
   })
   .catch(err => {
     res.status(500).send({ error: err }).end();
-  });  
-  res.cookie('token', jwt.sign({ user: req.body.username }, privateKey, { algorithm: 'RS256', expiresIn: '1h' })).send({ status: 'logged' });
+  });      
 });
 
 // A request is attempting to clock-in/out, verify if it has logged first
@@ -86,7 +104,7 @@ app.post('/clock', function(req, res, next) {
     res.status(403).send({ error: err });
     res.end(); 
   }
-  clockIn(decoded, req, res, next);
+  clock(decoded, req, res, next);
 });
 
 // At this point, no other route has been matched so we assume 404

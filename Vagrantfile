@@ -97,6 +97,10 @@ Vagrant.configure("2") do |config|
     #  -> Reload firewall rules
     firewall-cmd --reload
 
+    # Locale and time
+    timedatectl set-timezone 'Europe/Madrid'
+    localectl set-locale LANG=es_ES.utf8 
+
     # MySQL secure installation
     mysql_secure_installation
     SHELL
