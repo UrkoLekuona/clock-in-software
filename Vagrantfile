@@ -14,8 +14,8 @@ Vagrant.configure("2") do |config|
   # boxes at https://vagrantcloud.com/search.
   config.vm.box = "centos/7"
 
-  # Rsync configuration
-  config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__auto: true
+  # Shared folder configuration
+  config.vm.synced_folder ".", "/vagrant", type: "rsync"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -99,9 +99,9 @@ Vagrant.configure("2") do |config|
 
     # Locale and time
     timedatectl set-timezone 'Europe/Madrid'
-    localectl set-locale LANG=es_ES.utf8 
+    #localectl set-locale LANG=es_ES.utf8 
 
     # MySQL secure installation
-    mysql_secure_installation
+    #mysql_secure_installation
     SHELL
 end

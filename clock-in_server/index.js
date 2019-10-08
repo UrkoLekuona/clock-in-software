@@ -49,10 +49,12 @@ const pool = mariadb.createPool({ host: 'localhost', user: 'noadmin', password: 
 // with a successful status
 function clock(decoded, req, res, next) {
   var type = req.body.type;
-  if (type !== null && (type === 'in' || type === 'out')){
+  if (type !== undefined && (type === 'in' || type === 'out')) {
     pool.getConnection().then(conn => {
       conn.query("SELECT type, date FROM clock WHERE user=? AND date=(SELECT MAX(date) FROM clock WHERE user=?)", [decoded.user, decoded.user]).then((rows) => {
-        if (rows[0] === undefined || rows[0].type !== type) {
+        if (rows[0] === undefined && type === 'out') {
+          res.status(400).send({ status: 'Bad request: can\'t clock-out before clocking-in'}).end(); 
+        } else if (rows[0] === undefined || rows[0].type !== type) {
           return conn.query("INSERT INTO clock(user, type, date) VALUES(?,?,NOW())", [decoded.user, type]).then((dbres) => {
             res.send({ status: 'ok' });
           });
@@ -66,8 +68,27 @@ function clock(decoded, req, res, next) {
       res.status(500).send({ error: err }).end();
     });
   } else {
-    res.status(400).send({ status: 'Bad request: Not a valid type' }).end();
+    res.status(400).send({ status: 'Bad request: not a valid type' }).end();
   }  
+}
+
+// Function to call when the request is an issue attempt.
+// It will register the issue in the database and answer
+// with a successful status
+function issue(decoded, req, res, next) {
+  var issue = req.body.issue;
+  if (issue !== undefined && issue.length < 2550) {
+    pool.getConnection().then(conn => {
+      return conn.query("INSERT INTO issue(user, date, text, noted) VALUES(?,NOW(),?,0)", [decoded.user, issue]).then((dbres) => {
+        res.send({ status: 'ok' });
+      });
+    })
+    .catch(err => {
+      res.status(500).send({ error: err }).end();
+    });
+  } else {
+    res.status(400).send({ status: 'Bad request: text must be between 0 and 2550 characters long' }).end();
+  }
 }
 
 // Login attempt, using passport. If authentication succeeds, generate JWT token
@@ -82,7 +103,7 @@ app.post('/login', passport.authenticate('ldapauth', {session: false}), (req, re
           date = 'none';
         } else {
           type = rows[0].type;
-          date = rows[0].date;
+          date = new Date(rows[0].date);
         }
         res.cookie('token', jwt.sign({ user: req.body.username }, privateKey, { algorithm: 'RS256', expiresIn: '1h' })).send({ status: 'logged', type: type, date: date });      
         conn.end();
@@ -105,6 +126,19 @@ app.post('/clock', function(req, res, next) {
     res.end(); 
   }
   clock(decoded, req, res, next);
+});
+
+// A request is attempting to write an issue
+app.post('/issue', function(req, res, next) {
+  // JWT verification
+  var publicKey = fs.readFileSync('jwtRS256.key.pub', 'utf8');
+  try {
+    var decoded = jwt.verify(req.cookies.token, publicKey, { algorithms: ['RS256'] });
+  } catch(err) {
+    res.status(403).send({ error: err });
+    res.end(); 
+  }
+  issue(decoded, req, res, next);
 });
 
 // At this point, no other route has been matched so we assume 404
