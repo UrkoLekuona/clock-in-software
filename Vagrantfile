@@ -31,7 +31,11 @@ Vagrant.configure("2") do |config|
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine and only allow access
   # via 127.0.0.1 to disable public access
+  
+  # API
   config.vm.network "forwarded_port", guest: 8080, host: 8080, host_ip: "127.0.0.1"
+  # Web server
+  config.vm.network "forwarded_port", guest: 80, host: 8081, host_ip: "127.0.0.1"
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
@@ -74,6 +78,12 @@ Vagrant.configure("2") do |config|
     curl -sL https://rpm.nodesource.com/setup_12.x | sudo -E bash -
     yum install -y nodejs 
 
+    # Nginx installation
+    yum install -y epel-release
+    yum install -y nginx 
+    mkdir /var/www/html
+    chwon vagrant:vagrant /var/www/html
+
     # MariaDB installation
     yum install -y mariadb-server
  
@@ -88,11 +98,15 @@ Vagrant.configure("2") do |config|
     systemctl enable firewalld
     systemctl start mariadb
     systemctl enable mariadb
+    systemctl start nginx
+    systemctl enable nginx
     
     #  -> Disable SELinux? (had issues with tftp boot)
     setenforce 0
   
     # Firewall configuration
+    firewall-cmd --permanent --zone=public --add-service=http
+    firewall-cmd --permanent --zone=public --add-service=https
     firewall-cmd --permanent --set-target=ACCEPT
     #  -> Reload firewall rules
     firewall-cmd --reload

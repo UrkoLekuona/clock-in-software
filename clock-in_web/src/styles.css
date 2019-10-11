@@ -1,0 +1,77 @@
+/* You can add global styles to this file, and also import other style files */
+/*@import "../node_modules/@angular/material/prebuilt-themes/indigo-pink.css";
+*/
+body {
+  font-family: "Roboto", sans-serif;
+  margin: 0px !important;
+}
+
+.app-header {
+  color: #fff;
+  background-color: #0099e0;
+  text-align: center;
+  padding: 1%;
+  -webkit-box-shadow: 2px 4px 58px -20px rgba(0, 0, 0, 1);
+  -moz-box-shadow: 2px 4px 58px -20px rgba(0, 0, 0, 1);
+  box-shadow: 2px 4px 58px -20px rgba(0, 0, 0, 1);
+}
+
+.login-container {
+  width: 50%;
+  padding: 0% !important;
+  margin: 18% auto;
+  background-color: #fff;
+  -webkit-box-shadow: 2px 4px 58px -20px rgba(0, 0, 0, 1);
+  -moz-box-shadow: 2px 4px 58px -20px rgba(0, 0, 0, 1);
+  box-shadow: 2px 4px 58px -20px rgba(0, 0, 0, 1);
+}
+
+.login-box-header {
+  width: auto;
+  height: 20%;
+  background-color: #0099e0;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 3em;
+  padding: 2%;
+  color: #fff;
+}
+
+.login-box-body {
+  width: auto;
+  height: 100%;
+  padding: 5% 5% 5% 5%;
+  color: #d2d2d2;
+}
+
+.login-icon {
+  margin-top: -2px;
+}
+
+.justifier {
+  width: 100%;
+  padding-bottom: 2%;
+  font-size: 1.5em;
+  margin: 0 auto;
+  color: black;
+}
+
+.login-button {
+  width: 100%;
+  padding: 1.5% !important;
+  background-color: #0099e0;
+  font-size: 1.5em;
+  color: #fff !important;
+}
+
+.login-button[disabled] {
+  width: 100%;
+  padding: 1.5% !important;
+  background-color: #74adc7ce;
+  font-size: 1.5em;
+  color: #fff !important;
+}
+
+.mat-form-field-empty.mat-form-field-label {
+  color: rgb(160, 156, 156);
+}

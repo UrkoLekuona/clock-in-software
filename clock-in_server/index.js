@@ -7,6 +7,7 @@ var express      = require('express'),
     fs           = require('file-system'),
     mariadb      = require('mariadb'),
     pass_file    = require('./password.key.json'),
+    cors         = require('cors'),
     LdapStrategy = require('passport-ldapauth');
 
 // LDAP strategy
@@ -26,6 +27,7 @@ var app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
+app.use(cors());
 app.use(passport.initialize());
 
 // Timezone

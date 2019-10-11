@@ -1,0 +1,79 @@
+<!-- Application header starts -->
+<div class="app-header">
+  <h1 class="app-heading">{{ title }}</h1>
+</div>
+<!-- Application header ends -->
+
+<mat-grid-list cols="3">
+  <mat-grid-tile></mat-grid-tile>
+
+  <!-- Writing markup for login starts -->
+  <mat-grid-tile class="login-element">
+    <div class="login-container">
+      <form class="example-form" [formGroup]="loginForm">
+        <!-- Template Body starts -->
+        <div class="login-box-body">
+          <!-- Markup for getting Username starts -->
+          <mat-grid-list cols="9">
+            <mat-grid-tile [rowspan]="1" class="login-icon">
+              <i class="material-icons">
+                perm_identity
+              </i>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="7">
+              <mat-input-container class="justifier">
+                <mat-form-field class="input-container" floatLabel="never">
+                  <input
+                    matInput
+                    formControlName="username"
+                    type="text"
+                    placeholder="Usuario"
+                  />
+                </mat-form-field>
+              </mat-input-container>
+            </mat-grid-tile>
+          </mat-grid-list>
+          <!-- Markup for getting Username ends -->
+          <br />
+          <!-- Markup for getting Password starts -->
+          <mat-grid-list cols="9">
+            <mat-grid-tile [colspan]="1" class="login-icon">
+              <i class="material-icons">
+                lock
+              </i>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="7">
+              <mat-input-container class="justifier">
+                <mat-form-field class="input-container" floatLabel="never">
+                  <input
+                    matInput
+                    formControlName="password"
+                    type="password"
+                    placeholder="Contraseña"
+                  />
+                </mat-form-field>
+              </mat-input-container>
+            </mat-grid-tile>
+          </mat-grid-list>
+          <!-- Markup for getting Password ends -->
+          <br />
+          <button
+            mat-button
+            (click)="submit(loginForm.value)"
+            [disabled]="!loginForm.valid"
+            class="login-button"
+            ng-disabled="!loginForm.valid"
+          >
+            <i class="material-icons">
+              input
+            </i>
+            Login
+          </button>
+        </div>
+        <!-- Template Body ends -->
+      </form>
+    </div>
+  </mat-grid-tile>
+  <!-- Writing markup for login ends -->
+  <mat-grid-tile></mat-grid-tile>
+</mat-grid-list>
