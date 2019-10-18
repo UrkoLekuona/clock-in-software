@@ -59,37 +59,15 @@ app.use(expressJwt({
 })); 
 
 app.use(function(err, req, res, next) {
-  console.log(req.path);
   if(err.name === 'UnauthorizedError' && req.path != '/login') {
-    console.log('No token');
-    res.status(401).send('invalid token...');
+    console.log('Invalid token request from ', req.ip);
+    res.status(401).send({ status: 'Invalid token' }).end();
+  } else{
+    next();
   }
-  next();
 });
 
-// Function to call when the request is a clock-in attempt.
-// It will register the event in the database and answer
-// with a successful status
-function clock(decoded, req, res, next) {
-}
-
-// Function to call when the request is an issue attempt.
-// It will register the issue in the database and answer
-// with a successful status
 function issue(decoded, req, res, next) {
-  var issue = req.body.issue;
-  if (issue !== undefined && issue.length < 2550) {
-    pool.getConnection().then(conn => {
-      return conn.query("INSERT INTO issue(user, date, text, noted) VALUES(?,NOW(),?,0)", [decoded.user, issue]).then((dbres) => {
-        res.send({ status: 'ok' });
-      });
-    })
-    .catch(err => {
-      res.status(500).send({ error: err }).end();
-    });
-  } else {
-    res.status(400).send({ status: 'Bad request: text must be between 0 and 2550 characters long' }).end();
-  }
 }
 
 // Login attempt, using passport. If authentication succeeds, generate JWT token
@@ -108,7 +86,6 @@ app.post('/login', passport.authenticate('ldapauth', {session: false}), (req, re
         }
         var token = jwt.sign({ user: req.body.username }, privateKey, { algorithm: 'RS256', expiresIn: '1h' });
         res.send({ status: 'logged', type: type, date: date, token: token });      
-        console.log('Sending token: ', token);
         conn.end();
       });
     });
@@ -121,8 +98,6 @@ app.post('/login', passport.authenticate('ldapauth', {session: false}), (req, re
 // A request is attempting to clock-in/out, verify if it has logged first
 app.post('/clock', function(req, res, next) {
   var type = req.body.type;
-  console.log(type);
-  console.log(req.user);
   var ip = req.ip;
   //var ip = req.connection.remoteAddress;
   if (type !== undefined && (type === 'in' || type === 'out')) {
@@ -144,16 +119,18 @@ app.post('/clock', function(req, res, next) {
 
 // A request is attempting to write an issue
 app.post('/issue', function(req, res, next) {
-  // JWT verification
-  var publicKey = fs.readFileSync('jwtRS256.key.pub', 'utf8');
-  try {
-    console.log('Verifying clock request token: ', req.cookies.token);
-    var decoded = jwt.verify(req.cookies.token, publicKey, { algorithms: ['RS256'] });
-    console.log('Verification successful, token: ', decoded);
-    issue(decoded, req, res, next);
-  } catch(err) {
-    console.log('Verification error: ', err);
-    res.status(403).send({ error: err }).end();
+  var issue = req.body.issue;
+  if (issue !== undefined && issue.length < 2550) {
+    pool.getConnection().then(conn => {
+      return conn.query("INSERT INTO issue(user, date, text, noted) VALUES(?,NOW(),?,0)", [req.user.user, issue]).then((dbres) => {
+        res.send({ status: 'ok' });
+      });
+    })
+    .catch(err => {
+      res.status(500).send({ error: err }).end();
+    });
+  } else {
+    res.status(400).send({ status: 'Bad request: text must be between 0 and 2550 characters long' }).end();
   }
 });
 

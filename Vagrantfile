@@ -15,7 +15,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = "centos/7"
 
   # Shared folder configuration
-  config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__exclude: ['./clock-in_web/node_modules*']
+  config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__exclude: ['./clock-in_web/']
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs

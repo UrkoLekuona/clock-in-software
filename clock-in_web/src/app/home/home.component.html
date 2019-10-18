@@ -1,4 +1,8 @@
-<p>home works!</p>
-<p>{{username}}</p>
+<div class="app-header">
+    <h1 class="app-heading">{{ title }}</h1>
+  </div>
+
+<p>Conectado como {{ username }}</p>
+<p>{{ type == 'in' ? 'Fichaste' : 'Desfichaste' }} por última vez: {{ date | date:'medium' }} </p>
 <button (click)="clock('in')">IN</button>
 <button (click)="clock('out')">OUT</button>

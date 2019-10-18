@@ -25,4 +25,11 @@ export class UserService {
       if (lastLogin.date) this.lastLogin.date = lastLogin.date;
     }
   }
+
+  logout() {
+    this.username = '';
+    this.token = '';
+    this.lastLogin = { type: '', date: '' };
+  }
+
 }

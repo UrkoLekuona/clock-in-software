@@ -3,6 +3,7 @@ import { Routes, RouterModule } from "@angular/router";
 import { HomeComponent } from "./home/home.component";
 import { AppComponent } from "./app.component";
 import { LoginComponent } from './login/login.component';
+import { AuthGuard } from './auth-guard.guard';
 
 const routes: Routes = [
   {
@@ -16,6 +17,7 @@ const routes: Routes = [
   },
   {
     path: "home",
+    canActivate: [AuthGuard],
     loadChildren: () => import("./home/home.module").then(m => m.HomeModule)
   },
   { path: "**", redirectTo: "login", pathMatch: "full" }
