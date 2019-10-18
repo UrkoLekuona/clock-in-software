@@ -9,8 +9,9 @@ export class NetworkService {
   protocol = 'http://';
   webserver = 'localhost:8080';
   api = '';
-  httpOptions = {
-    headers: new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded')
+  httpOptions: any = {
+    headers: new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded'),
+    observe: 'body' as "body"
   };
 
   constructor(private http: HttpClient) { }
@@ -19,6 +20,16 @@ export class NetworkService {
     let body = new URLSearchParams();
     body.set('username', value.username);
     body.set('password', value.password);
-    return this.http.post(this.protocol + this.webserver + this.api + '/login', body.toString(), this.httpOptions);
+    let options = this.httpOptions;
+    options.observe = 'response' as "body";
+    return this.http.post(this.protocol + this.webserver + this.api + '/login', body.toString(), options);
+  }
+
+  clock(value) {
+    let body = new URLSearchParams();
+    body.set('type', value);
+    let options = this.httpOptions;
+    options.observe = 'response' as "body";
+    return this.http.post(this.protocol + this.webserver + this.api + '/clock', body.toString(), options);
   }
 }

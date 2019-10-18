@@ -15,7 +15,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = "centos/7"
 
   # Shared folder configuration
-  config.vm.synced_folder ".", "/vagrant", type: "rsync"
+  config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__exclude: ['./clock-in_web/node_modules*']
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -93,6 +93,11 @@ Vagrant.configure("2") do |config|
     npm --prefix /opt/clock-in_server install /opt/clock-in_server --unsafe-perm
     chown vagrant:vagrant /opt/clock-in_server/
 
+    # Locale and time
+    timedatectl set-timezone 'Europe/Madrid'
+    export TZ='Europe/Madrid'
+    #localectl set-locale LANG=es_ES.utf8
+
     # Start and enable services
     systemctl start firewalld
     systemctl enable firewalld
@@ -110,10 +115,6 @@ Vagrant.configure("2") do |config|
     firewall-cmd --permanent --set-target=ACCEPT
     #  -> Reload firewall rules
     firewall-cmd --reload
-
-    # Locale and time
-    timedatectl set-timezone 'Europe/Madrid'
-    #localectl set-locale LANG=es_ES.utf8 
 
     # MySQL secure installation
     #mysql_secure_installation
