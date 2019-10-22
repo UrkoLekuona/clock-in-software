@@ -1,8 +1,31 @@
 <div class="app-header">
-    <h1 class="app-heading">{{ title }}</h1>
-  </div>
+  <h1 class="app-heading">{{ title }}</h1>
+</div>
 
-<p>Conectado como {{ username }}</p>
-<p>{{ type == 'in' ? 'Fichaste' : 'Desfichaste' }} por última vez: {{ date | date:'medium' }} </p>
-<button (click)="clock('in')">IN</button>
-<button (click)="clock('out')">OUT</button>
+<mat-grid-list cols="3">
+  <mat-grid-tile></mat-grid-tile>
+  <mat-grid-tile class="login-element">
+    <div class="login-container">
+      <form class="example-form">
+        <div class="login-box-body" style="color:black">
+          <p>Conectado como {{ username }}</p>
+          <p *ngIf="isValidDate(date)">
+            Fichaste por última vez: {{ date | date: "medium" }}
+          </p>
+          <button mat-button class="in-button" (click)="clock('in')">
+            Fichar
+          </button>
+          <button mat-button class="out-button" (click)="clock('out')">
+            Desfichar
+          </button>
+          <br />
+          <br />
+          <button mat-button class="login-button" (click)="issue()">
+            Incidencia
+          </button>
+        </div>
+      </form>
+    </div>
+  </mat-grid-tile>
+  <mat-grid-tile></mat-grid-tile>
+</mat-grid-list>

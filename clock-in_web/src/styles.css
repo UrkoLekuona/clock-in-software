@@ -75,3 +75,17 @@ body {
 .mat-form-field-empty.mat-form-field-label {
   color: rgb(160, 156, 156);
 }
+
+.in-button {
+  width: 50%;
+  padding: 1.5% !important;
+  background-color: rgb(74, 247, 74);
+  font-size: 1.5em;
+}
+
+.out-button {
+  width: 50%;
+  padding: 1.5% !important;
+  background-color: rgb(238, 40, 40);
+  font-size: 1.5em;
+}
