@@ -24,7 +24,7 @@ export class HomeComponent implements OnInit {
 
   clock(value) {
     console.log(value);
-    const response = this.network.clock(value).subscribe(
+    this.network.clock(value).subscribe(
       data => {
         console.log(data);
         this.date = new Date();
@@ -36,7 +36,30 @@ export class HomeComponent implements OnInit {
         console.log(error);
         switch (error.status) {
           case 400:
-            alert("Error: Petición no válida.");
+            if (error.error.status === 'Bad request: unpaired outdate') {
+              if(confirm("Estás intentando salir sin haber marcado antes una hora de entrada. Si no has podido o se te ha olvidado, ¿quieres abrir una incidencia?")) {
+
+              }
+            } else if (error.error.status === 'Bad request: unpaired indate') {
+              if(confirm("Estás intentado entrar, pero la última vez no marcaste la hora de salida. Si no pudiste o se te olvidó, ¿quieres abrir una incidencia?")) {
+                this.network.lastclock('in').subscribe(res => {
+                  const aux: any = res;
+                  console.log(aux);
+                },
+                err => {
+                  console.log(err);
+                  switch (error.status) {
+                    case 400:
+                      alert("Error: Petición no válida.");
+                      break;
+                    default:
+                      alert("Error: Fallo desconocido. Contacte con un administrador.");
+                  }
+                });
+              }
+            } else {
+              alert("Error: Petición no válida.");
+            }
             break;
           case 401:
             alert("Error: Acceso denegado. Token no válido.");
@@ -55,6 +78,13 @@ export class HomeComponent implements OnInit {
 
   isValidDate(d) {
     return d instanceof Date && !isNaN(d.getTime());
+  }
+
+  logout(){
+    if(confirm("¿Cerrar sesión?")) {
+      this.userService.logout();
+      this.router.navigate(["/login"]);
+    }
   }
 
   issue() {

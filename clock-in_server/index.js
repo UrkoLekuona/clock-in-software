@@ -78,7 +78,7 @@ app.post('/login', passport.authenticate('ldapauth', {session: false}), (req, re
   var privateKey = fs.readFileSync('jwtRS256.key', 'utf8');
   mariadb.createConnection(db_opts).then(conn => {
     conn.query("INSERT IGNORE INTO users VALUES(?)", req.body.username).then((dbres) => {
-      conn.query("SELECT CASE WHEN MAX(inDate) > MAX(outDate) THEN MAX(inDate) ELSE MAX(outDate) END AS date FROM clock WHERE user=?;", [req.body.username]).then((rows) => {
+      conn.query("SELECT CASE WHEN MAX(outDate) IS NULL THEN MAX(inDate) WHEN MAX(inDate) > MAX(outDate) THEN MAX(inDate) ELSE MAX(outDate) END AS date FROM clock WHERE user=?;", [req.body.username]).then((rows) => {
         if (rows[0] === undefined || rows[0].date == null) { 
           date = 'none';
         } else {
@@ -149,15 +149,68 @@ app.post('/clock', function(req, res, next) {
   }  
 });
 
+// A request is asking for information about last clock
+app.post('/lastclock', function(req, res, next) {
+  var type = req.body.type
+  if (type !== undefined && (type === 'in' || type === 'out')) {
+    if (type === 'in') {
+      mariadb.createConnection(db_opts).then(conn => {
+        conn.query("SELECT id, inDate, outDate FROM clock WHERE user=? AND inDate=(SELECT MAX(inDate) FROM clock WHERE user=?)", [req.user.user, req.user.user]).then(maxIn => {
+          if (maxIn[0] !== undefined && maxIn[0].inDate != null && maxIn[0].outDate == null) {
+	    res.send({ id: maxIn[0].id, in: maxIn[0].inDate });
+          } else {
+            error('Bad request: Last clock-in is right', 'LastClock', 400, ip, res);
+          }
+        })
+     })
+     .catch(err => {
+        error(err, 'DB connection error', 500, ip, res);
+     });
+    }
+  } else {
+    error('Bad request: not a valid type', 'LastClock', 400, ip, res);
+  }
+});
+
 // A request is attempting to write an issue
 app.post('/issue', function(req, res, next) {
   var issue = req.body.issue;
-  if (issue !== undefined && issue.length < 2550) {
+  var id = req.body.id;
+  if (issue !== undefined && issue.length < 2550 && id !== undefined) {
     mariadb.createConnection(db_opts).then(conn => {
-      return conn.query("INSERT INTO issue(user, date, text, noted) VALUES(?,NOW(),?,0)", [req.user.user, issue]).then((dbres) => {
-        res.send({ status: 'ok' });
-      });
-      conn.end().then(() => {}).catch(err => { console.log('[', Date.now(), '] DB connection ended abruptly(/issue, ', req.user.user, ')'); });
+      if (id !== undefined) {
+        conn.query("INSERT INTO issue(clock_id, user, date, text, noted) VALUES(?,NOW(),?,0)", [id, req.user.user, issue]).then((dbres) => {
+          if (req.body.inDate != undefined) {
+            conn.query("UPDATE clock SET inDate=?, inConfirmed=0 WHERE id=?", [req.body.inDate, id]).then(upres => {
+              res.send({ status: 'ok' });
+              conn.end().then(() => {}).catch(err => { console.log('[', Date.now(), '] DB connection ended abruptly(/issue, ', req.user.user, ')'); });
+            })
+            .catch(err => {
+              error(err, 'DB update error', 500, req.ip, res);
+            });
+          }
+          if (req.body.outDate != undefined) {
+            conn.query("UPDATE clock SET outDate=?, outConfirmed=0 WHERE id=?", [req.body.outDate, id]).then(upres => {
+              res.send({ status: 'ok' });
+              conn.end().then(() => {}).catch(err => { console.log('[', Date.now(), '] DB connection ended abruptly(/issue, ', req.user.user, ')'); });
+            })
+            .catch(err => {
+              error(err, 'DB update error', 500, req.ip, res);
+            });
+          }
+        })
+        .catch(err => {
+          error(err, 'DB insert error', 500, req.ip, res);
+        });
+      } else {
+        conn.query("INSERT INTO issue(user, date, text, noted) VALUES(?,NOW(),?,0)", [req.user.user, issue]).then((dbres) => {
+          res.send({ status: 'ok' });
+          conn.end().then(() => {}).catch(err => { console.log('[', Date.now(), '] DB connection ended abruptly(/issue, ', req.user.user, ')'); });
+        })
+        .catch(err => {
+          error(err, 'DB insert error', 500, req.ip, res);
+        });
+      }
     })
     .catch(err => {
       res.status(500).send({ error: err }).end();

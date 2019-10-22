@@ -15,7 +15,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = "centos/7"
 
   # Shared folder configuration
-  config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__exclude: ['./clock-in_web/']
+  config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__exclude: ['./clock-in_web/*', '*/node_modules*']
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -116,7 +116,9 @@ Vagrant.configure("2") do |config|
     #  -> Reload firewall rules
     firewall-cmd --reload
 
-    # MySQL secure installation
+    # Database setup
     #mysql_secure_installation
+    #mysql -u root -p < /opt/clock-in_server/dbdump.sql
+    #mysql -u root -p -e "FLUSH PRIVILEGES"
     SHELL
 end

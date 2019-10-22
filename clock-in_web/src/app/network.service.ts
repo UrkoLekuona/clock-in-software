@@ -25,6 +25,14 @@ export class NetworkService {
     return this.http.post(this.protocol + this.webserver + this.api + '/login', body.toString(), options);
   }
 
+  lastclock(value) {
+    let body = new URLSearchParams();
+    body.set('type', value);
+    let options = this.httpOptions;
+    options.observe = 'response' as "body";
+    return this.http.post(this.protocol + this.webserver + this.api + '/lastclock', body.toString(), options);
+  }
+
   clock(value) {
     let body = new URLSearchParams();
     body.set('type', value);
