@@ -40,4 +40,12 @@ export class NetworkService {
     options.observe = 'response' as "body";
     return this.http.post(this.protocol + this.webserver + this.api + '/clock', body.toString(), options);
   }
+
+  issue(value) {
+    let body = new URLSearchParams();
+    body.set('issue', value);
+    let options = this.httpOptions;
+    options.observe = 'response' as "body";
+    return this.http.post(this.protocol + this.webserver + this.api + '/issue', body.toString(), options);
+  }
 }

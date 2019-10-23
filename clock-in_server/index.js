@@ -159,24 +159,38 @@ app.post('/lastclock', function(req, res, next) {
           if (maxIn[0] !== undefined && maxIn[0].inDate != null && maxIn[0].outDate == null) {
 	    res.send({ id: maxIn[0].id, in: maxIn[0].inDate });
           } else {
-            error('Bad request: Last clock-in is right', 'LastClock', 400, ip, res);
+            error('Bad request: Last clock-in is right', 'LastClock', 400, req.ip, res);
           }
         })
-     })
-     .catch(err => {
-        error(err, 'DB connection error', 500, ip, res);
-     });
+      })
+      .catch(err => {
+        error(err, 'DB connection error', 500, req.ip, res);
+      });
+    } else {
+      mariadb.createConnection(db_opts).then(conn => {
+        conn.query("SELECT id, inDate, outDate FROM clock WHERE user=? AND outDate=(SELECT MAX(outDate) FROM clock WHERE user=?)", [req.user.user, req.user.user]).then(maxOut => {
+          if (maxOut[0] !== undefined && maxOut[0].outDate != null && maxOut[0].inDate != null) {
+	          res.send({ id: maxOut[0].id, out: maxOut[0].outDate });
+          } else if (maxOut[0] !== undefined && maxOut[0].outDate != null && maxOut[0].inDate == null) {
+            error('DB error: Last clock is corrupted', 'LastClock', 500, req.ip, res);
+          } else {
+            error('Bad request: Last clock-out is right', 'LastClock', 400, req.ip, res);
+          }
+        })
+      })
+      .catch(err => {
+        error(err, 'DB connection error', 500, req.ip, res);
+      });
     }
   } else {
-    error('Bad request: not a valid type', 'LastClock', 400, ip, res);
+    error('Bad request: not a valid type', 'LastClock', 400, req.ip, res);
   }
 });
 
 // A request is attempting to write an issue
 app.post('/issue', function(req, res, next) {
   var issue = req.body.issue;
-  var id = req.body.id;
-  if (issue !== undefined && issue.length < 2550 && id !== undefined) {
+  if (issue !== undefined && issue.text !== undefined && issue.text.length < 2550) {
     mariadb.createConnection(db_opts).then(conn => {
       if (id !== undefined) {
         conn.query("INSERT INTO issue(clock_id, user, date, text, noted) VALUES(?,NOW(),?,0)", [id, req.user.user, issue]).then((dbres) => {

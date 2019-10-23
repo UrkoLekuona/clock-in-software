@@ -16,7 +16,7 @@ import { UserService } from "../user.service";
   styleUrls: ["./login.component.css"]
 })
 export class LoginComponent implements OnInit {
-  title = "Fichajes DIPC";
+
   loginForm: FormGroup;
 
   constructor(
@@ -34,7 +34,7 @@ export class LoginComponent implements OnInit {
   }
 
   submit(value) {
-    const response = this.network.login(value).subscribe(
+    this.network.login(value).subscribe(
       data => {
         const aux: any = data;
         console.log(aux);

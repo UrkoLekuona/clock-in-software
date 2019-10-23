@@ -1,21 +1,17 @@
-<div class="app-header">
-  <h1 class="app-heading">{{ title }}</h1>
-</div>
-
 <mat-grid-list cols="3">
   <mat-grid-tile></mat-grid-tile>
   <mat-grid-tile class="login-element">
     <div class="login-container">
-      <form class="example-form">
+      <form>
         <div class="login-box-body" style="color:black">
           <p>Conectado como {{ username }}</p>
           <p *ngIf="isValidDate(date)">
             Fichaste por última vez: {{ date | date: "medium" }}
           </p>
-          <button mat-button class="in-button" (click)="clock('in')">
+          <button mat-raised-button class="in-button" (click)="clock('in')">
             Fichar
           </button>
-          <button mat-button class="out-button" (click)="clock('out')">
+          <button mat-raised-button class="out-button" (click)="clock('out')">
             Desfichar
           </button>
           <br />

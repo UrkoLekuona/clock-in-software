@@ -10,7 +10,7 @@ import { UserService } from "../user.service";
   styleUrls: ["./home.component.css"]
 })
 export class HomeComponent implements OnInit {
-  title = "Fichajes DIPC";
+
   username = this.userService.username;
   date = new Date(this.userService.lastLogin.date);
 
@@ -38,24 +38,11 @@ export class HomeComponent implements OnInit {
           case 400:
             if (error.error.status === 'Bad request: unpaired outdate') {
               if(confirm("Estás intentando salir sin haber marcado antes una hora de entrada. Si no has podido o se te ha olvidado, ¿quieres abrir una incidencia?")) {
-
+                this.lastClock('out');
               }
             } else if (error.error.status === 'Bad request: unpaired indate') {
               if(confirm("Estás intentado entrar, pero la última vez no marcaste la hora de salida. Si no pudiste o se te olvidó, ¿quieres abrir una incidencia?")) {
-                this.network.lastclock('in').subscribe(res => {
-                  const aux: any = res;
-                  console.log(aux);
-                },
-                err => {
-                  console.log(err);
-                  switch (error.status) {
-                    case 400:
-                      alert("Error: Petición no válida.");
-                      break;
-                    default:
-                      alert("Error: Fallo desconocido. Contacte con un administrador.");
-                  }
-                });
+                this.lastClock('in');
               }
             } else {
               alert("Error: Petición no válida.");
@@ -76,6 +63,28 @@ export class HomeComponent implements OnInit {
     );
   }
 
+  lastClock(value) {
+    this.router.navigate(["/issueForm"]);
+    /*this.network.lastclock(value).subscribe(res => {
+      const aux: any = res;
+      console.log(aux);
+      this.router.navigate(["/issue"], { state: aux.body });
+    },
+    err => {
+      console.log(err);
+      switch (err.status) {
+        case 400:
+          alert("Error: Petición no válida.");
+          break;
+        case 500:
+          alert("Error: Error del servidor. Contacte con un administrado.");
+          break;
+        default:
+          alert("Error: Fallo desconocido. Contacte con un administrador.");
+      }
+    });*/
+  }
+
   isValidDate(d) {
     return d instanceof Date && !isNaN(d.getTime());
   }
@@ -88,6 +97,7 @@ export class HomeComponent implements OnInit {
   }
 
   issue() {
-
+    //this.router.navigate(["/issue"]);
+    this.router.navigate(["/issueForm"]);
   }
 }
