@@ -1,0 +1,74 @@
+<mat-grid-list cols="3">
+  <mat-grid-tile></mat-grid-tile>
+  <mat-grid-tile class="login-element">
+    <div class="login-container">
+      <form [formGroup]="issueForm">
+        <div class="login-box-body" style="color:black">
+          <h2>Crear incidencia</h2>
+          <div *ngIf="inDate !== undefined">
+            <p>Tú último fichaje de entrada fue:</p>
+            <p>{{ inDate | date: "medium" }}</p>
+          </div>
+          <div *ngIf="outDate !== undefined">
+            <p>Tú último fichaje de salida fue:</p>
+            <p>{{ outDate | date: "medium" }}</p>
+          </div>
+          <mat-divider></mat-divider>
+          <div *ngIf="inDate !== undefined || outDate !== undefined">
+            <h4>Fecha y hora de {{ inDate ? "entrada" : "salida" }}</h4>
+            <mat-form-field>
+              <mat-label>Fecha</mat-label>
+              <input
+                [value]="date.value"
+                matInput
+                formControlName="date"
+                [matDatepicker]="myPicker"
+                placeholder="DD/MM/AAAA"
+                (click)="myPicker.open()"
+              />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="myPicker"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #myPicker></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field>
+              <input
+                formControlName="hour"
+                matInput
+                placeholder="Hora"
+                aria-label="24hr format"
+                [ngxTimepicker]="fullTime"
+                [format]="24"
+              />
+              <ngx-material-timepicker #fullTime></ngx-material-timepicker>
+            </mat-form-field>
+          </div>
+          <mat-divider></mat-divider>
+          <br />
+          <mat-form-field>
+            <mat-label>Explicación</mat-label>
+            <textarea
+              formControlName="text"
+              matInput
+              cdkTextareaAutosize
+              cdkAutosizeMinRows="1"
+              cdkAutosizeMaxRows="10"
+              maxlength="2550"
+            ></textarea>
+          </mat-form-field>
+          <button
+            mat-raised-button
+            (click)="submit(issueForm.value)"
+            [disabled]="!issueForm.valid"
+            class="login-button"
+            ng-disabled="!issueForm.valid"
+          >
+            Enviar
+          </button>
+        </div>
+      </form>
+    </div>
+  </mat-grid-tile>
+  <mat-grid-tile></mat-grid-tile>
+</mat-grid-list>

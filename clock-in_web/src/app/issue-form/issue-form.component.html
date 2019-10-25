@@ -1,0 +1,49 @@
+<mat-grid-list cols="3">
+  <mat-grid-tile></mat-grid-tile>
+  <mat-grid-tile class="login-element">
+    <div class="login-container">
+      <form [formGroup]="issueForm">
+        <div class="login-box-body" style="color:black">
+          <h2>Crear incidencia</h2>
+          <mat-form-field style="width: 100%;">
+            <mat-label>Fecha</mat-label>
+            <input
+              [value]="date.value"
+              matInput
+              formControlName="date"
+              [matDatepicker]="myPicker"
+              placeholder="DD/MM/AAAA"
+              (click)="myPicker.open()"
+            />
+            <mat-datepicker-toggle
+              matSuffix
+              [for]="myPicker"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #myPicker></mat-datepicker>
+          </mat-form-field>
+          <mat-form-field style="width: 100%;" appearance="outline">
+            <mat-label>Explicación</mat-label>
+            <textarea
+              formControlName="text"
+              matInput
+              cdkTextareaAutosize
+              cdkAutosizeMinRows="5"
+              cdkAutosizeMaxRows="10"
+              maxlength="2550"
+            ></textarea>
+          </mat-form-field>
+          <button
+            mat-raised-button
+            (click)="send(issueForm.value)"
+            [disabled]="!issueForm.valid || waiting"
+            class="login-button"
+            ng-disabled="!issueForm.valid"
+          >
+            Enviar
+          </button>
+        </div>
+      </form>
+    </div>
+  </mat-grid-tile>
+  <mat-grid-tile></mat-grid-tile>
+</mat-grid-list>

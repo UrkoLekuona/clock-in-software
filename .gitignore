@@ -1,5 +1,6 @@
 # Other files
 mysql_secure.sh
+*private_key
 
 # DB dump files
 *.sql
