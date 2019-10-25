@@ -72,7 +72,7 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: <<-SHELL
     # Update and install required packages
     yum update -y
-    yum install -y vim gcc-c++ make
+    yum install -y vim gcc-c++ make openldap*
 
     # Node repository and installation
     curl -sL https://rpm.nodesource.com/setup_12.x | sudo -E bash -
@@ -120,5 +120,8 @@ Vagrant.configure("2") do |config|
     #mysql_secure_installation
     #mysql -u root -p < /opt/clock-in_server/dbdump.sql
     #mysql -u root -p -e "FLUSH PRIVILEGES"
+    
+    # Path
+    
     SHELL
 end
