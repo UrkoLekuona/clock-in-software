@@ -6,6 +6,7 @@ import {
   Validators,
   FormBuilder
 } from "@angular/forms";
+import Swal from "sweetalert2";
 
 import { NetworkService } from "../network.service";
 import { UserService } from "../user.service";
@@ -20,7 +21,12 @@ export class IssueFormComponent implements OnInit {
   issueForm: FormGroup;
   text: string;
   waiting: boolean = false;
-  date: { value: string } = { value: 'a' };
+  date: { value: string } = { value: "a" };
+  alert = Swal.mixin({
+    confirmButtonText: "Vale",
+    allowOutsideClick: false,
+    allowEscapeKey: false
+  });
 
   constructor(
     private formBuilder: FormBuilder,
@@ -31,8 +37,14 @@ export class IssueFormComponent implements OnInit {
 
   ngOnInit() {
     this.issueForm = this.formBuilder.group({
-      text: new FormControl('', Validators.required),
-      date: new FormControl('', Validators.compose([Validators.required, DateHourValidator.dateValidator]))
+      text: new FormControl("", Validators.required),
+      date: new FormControl(
+        "",
+        Validators.compose([
+          Validators.required,
+          DateHourValidator.dateValidator
+        ])
+      )
     });
   }
 
@@ -41,30 +53,56 @@ export class IssueFormComponent implements OnInit {
     console.log(value);
     this.network.issueform(value).subscribe(
       res => {
-        alert("Incidencia creada correctamente.");
-        this.router.navigate(["/home"]);
-        this.waiting = false;
+        this.alert
+          .fire({
+            title: "Éxito",
+            text: "Incidencia creada correctamente",
+            type: "success"
+          })
+          .then(result => {
+            this.router.navigate(["/home"]);
+            this.waiting = false;
+          });
       },
       err => {
         console.log(err);
         switch (err.status) {
           case 400:
-            alert("Error: El texto tiene que tener entre 0 y 2550 caracteres.");
+            this.alert.fire({
+              title: "Error",
+              text:
+                "El texto tiene que tener entre 0 y 2550 caracteres y la fecha tiene que ser DD/MM/YYYY.",
+              type: "error"
+            });
             break;
           case 401:
-            alert("Error: Acceso denegado. Token no válido.");
-            this.userService.logout();
-            this.router.navigate(["/login"]);
+            this.alert
+              .fire({
+                title: "Error",
+                text: "Acceso denegado, token no válido.",
+                type: "error"
+              })
+              .then(res => {
+                this.userService.logout();
+                this.router.navigate(["/login"]);
+              });
             break;
           case 500:
-            alert("Error: Fallo del servidor. Contacte con un administrador.");
+            this.alert.fire({
+              title: "Error",
+              text: "Fallo del servidor. Contacte con un administrador",
+              type: "error"
+            });
             break;
           default:
-            alert("Error: Fallo desconocido. Contacte con un administrador.");
+            this.alert.fire({
+              title: "Error",
+              text: "Fallo desconocido. Contacte con un administrador",
+              type: "error"
+            });
         }
         this.waiting = false;
       }
     );
-    //this.waiting = false;
   }
 }

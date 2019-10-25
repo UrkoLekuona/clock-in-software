@@ -1,5 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
+import Swal from "sweetalert2";
 
 import { NetworkService } from "../network.service";
 import { UserService } from "../user.service";
@@ -10,9 +11,13 @@ import { UserService } from "../user.service";
   styleUrls: ["./home.component.css"]
 })
 export class HomeComponent implements OnInit {
-
   username = this.userService.username;
   date = new Date(this.userService.lastLogin.date);
+  alert = Swal.mixin({
+    confirmButtonText: "Vale",
+    allowOutsideClick: false,
+    allowEscapeKey: false
+  });
 
   constructor(
     private network: NetworkService,
@@ -36,28 +41,63 @@ export class HomeComponent implements OnInit {
         console.log(error);
         switch (error.status) {
           case 400:
-            if (error.error.status === 'Bad request: unpaired outdate') {
-              if(confirm("Estás intentando salir sin haber marcado antes una hora de entrada. Si no has podido o se te ha olvidado, ¿quieres abrir una incidencia?")) {
-                this.lastClock('out');
-              }
-            } else if (error.error.status === 'Bad request: unpaired indate') {
-              if(confirm("Estás intentado entrar, pero la última vez no marcaste la hora de salida. Si no pudiste o se te olvidó, ¿quieres abrir una incidencia?")) {
-                this.lastClock('in');
-              }
+            if (error.error.status === "Bad request: unpaired outdate") {
+              this.alert.fire({
+                title: "¿Abrir incidencia?",
+                text: "Estás intentando salir sin haber marcado antes una hora de entrada. Si no has podido o se te ha olvidado, ¿quieres abrir una incidencia?",
+                type: "question",
+                showCancelButton: true,
+                cancelButtonText: 'Cancelar'
+              }).then(res => {
+                if (res.value) {
+                  this.lastClock("out");
+                }
+              });
+            } else if (error.error.status === "Bad request: unpaired indate") {
+              this.alert.fire({
+                title: "¿Abrir incidencia?",
+                text: "Estás intentado entrar, pero la última vez no marcaste la hora de salida. Si no pudiste o se te olvidó, ¿quieres abrir una incidencia?",
+                type: "question",
+                showCancelButton: true,
+                cancelButtonText: 'Cancelar'
+              }).then(res => {
+                if (res.value) {
+                  this.lastClock("in");
+                }
+              });
             } else {
-              alert("Error: Petición no válida.");
+              this.alert.fire({
+                title: "Error",
+                text: "Petición no válida.",
+                type: "error"
+              });
             }
             break;
           case 401:
-            alert("Error: Acceso denegado. Token no válido.");
-            this.userService.logout();
-            this.router.navigate(["/login"]);
+            this.alert
+              .fire({
+                title: "Error",
+                text: "Acceso denegado. Token no válido",
+                type: "error"
+              })
+              .then(res => {
+                this.userService.logout();
+                this.router.navigate(["/login"]);
+              });
             break;
           case 500:
-            alert("Error: Fallo del servidor. Contacte con un administrador.");
+            this.alert.fire({
+              title: "Error",
+              text: "Fallo del servidor. Contacte con un administrador.",
+              type: "error"
+            });
             break;
           default:
-            alert("Error: Fallo desconocido. Contacte con un administrador.");
+            this.alert.fire({
+              title: "Error",
+              text: "Fallo desconocido. Contacte con un administrador.",
+              type: "error"
+            });
         }
       }
     );
@@ -74,13 +114,25 @@ export class HomeComponent implements OnInit {
       console.log(err);
       switch (err.status) {
         case 400:
-          alert("Error: Petición no válida.");
+          this.alert.fire({
+            title: "Error",
+            text: "Petición no válida.",
+            type: "error"
+          });
           break;
         case 500:
-          alert("Error: Error del servidor. Contacte con un administrado.");
+          this.alert.fire({
+            title: "Error",
+            text: "Fallo del servidor. Contacte con un administrador.",
+            type: "error"
+          });
           break;
         default:
-          alert("Error: Fallo desconocido. Contacte con un administrador.");
+          this.alert.fire({
+            title: "Error",
+            text: "Fallo desconocido. Contacte con un administrador.",
+            type: "error"
+          });
       }
     });*/
   }
@@ -89,11 +141,18 @@ export class HomeComponent implements OnInit {
     return d instanceof Date && !isNaN(d.getTime());
   }
 
-  logout(){
-    if(confirm("¿Cerrar sesión?")) {
-      this.userService.logout();
-      this.router.navigate(["/login"]);
-    }
+  logout() {
+    this.alert.fire({
+      title: "¿Cerrar sesión?",
+      type: "question",
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar'
+    }).then(res => {
+      if (res.value) {
+        this.userService.logout();
+        this.router.navigate(["/login"]);
+      }
+    });
   }
 
   issue() {

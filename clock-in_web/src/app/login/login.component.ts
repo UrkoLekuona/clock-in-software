@@ -9,6 +9,7 @@ import { Router } from "@angular/router";
 
 import { NetworkService } from "../network.service";
 import { UserService } from "../user.service";
+import Swal from "sweetalert2";
 
 @Component({
   selector: "app-login",
@@ -18,6 +19,11 @@ import { UserService } from "../user.service";
 export class LoginComponent implements OnInit {
 
   loginForm: FormGroup;
+  alert = Swal.mixin({
+    confirmButtonText: "Vale",
+    allowOutsideClick: false,
+    allowEscapeKey: false
+  });
 
   constructor(
     private network: NetworkService,
@@ -46,13 +52,25 @@ export class LoginComponent implements OnInit {
       error => {
         switch (error.status) {
           case 401:
-            alert("Error: Usuario o contraseña incorrectos.");
+            this.alert.fire({
+              title: "Error",
+              text: "Usuario o contraseña incorrectos",
+              type: "error"
+            });
             break;
           case 500:
-            alert("Error: Fallo del servidor. Contacte con un administrador.");
+            this.alert.fire({
+              title: "Error",
+              text: "Fallo del servidor. Contacte con un administrador.",
+              type: "error"
+            });
             break;
           default:
-            alert("Error: Fallo desconocido. Contacte con un administrador.");
+            this.alert.fire({
+              title: "Error",
+              text: "Fallo desconocido. Contacte con un administrador.",
+              type: "error"
+            });
         }
         this.loginForm.controls["password"].setValue("");
       }

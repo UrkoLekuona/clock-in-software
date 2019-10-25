@@ -4,10 +4,13 @@
     <div class="login-container">
       <form>
         <div class="login-box-body" style="color:black">
-          <p>Conectado como {{ username }}</p>
-          <p *ngIf="isValidDate(date)">
-            Fichaste por última vez: {{ date | date: "medium" }}
-          </p>
+          <p style="text-align: center;">Conectado como <strong>{{ username }}</strong></p>
+          <div *ngIf="isValidDate(date)" style="text-align: center;">
+            <p>
+              Fichaste por última vez:
+            </p>
+            <p>{{ date | date: "medium" }}</p>
+          </div>
           <button mat-raised-button class="in-button" (click)="clock('in')">
             Fichar
           </button>

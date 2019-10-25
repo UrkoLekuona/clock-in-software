@@ -122,6 +122,6 @@ Vagrant.configure("2") do |config|
     #mysql -u root -p -e "FLUSH PRIVILEGES"
     
     # Path
-    
+    echo "export PATH=\"$PATH:/opt/clock-in_server/node_modules/.bin/\"" >> /home/vagrant/.bashrc 
     SHELL
 end
