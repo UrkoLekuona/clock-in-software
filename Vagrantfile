@@ -81,8 +81,8 @@ Vagrant.configure("2") do |config|
     # Nginx installation
     yum install -y epel-release
     yum install -y nginx 
-    mkdir /var/www/html
-    chwon vagrant:vagrant /var/www/html
+    mkdir -p /var/www/html
+    chown vagrant:vagrant /var/www/html
 
     # MariaDB installation
     yum install -y mariadb-server

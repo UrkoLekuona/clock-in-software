@@ -13,6 +13,7 @@ import { UserService } from "../user.service";
 export class HomeComponent implements OnInit {
   username = this.userService.username;
   date = new Date(this.userService.lastLogin.date);
+  type = this.userService.lastLogin.type;
   alert = Swal.mixin({
     confirmButtonText: "Vale",
     allowOutsideClick: false,
@@ -33,8 +34,10 @@ export class HomeComponent implements OnInit {
       data => {
         console.log(data);
         this.date = new Date();
+        this.type = value;
         this.userService.fillFields(this.username, this.userService.token, {
-          date: this.date.toString()
+          date: this.date.toString(),
+          type: value
         });
       },
       error => {
