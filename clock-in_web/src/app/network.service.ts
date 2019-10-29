@@ -9,7 +9,7 @@ import * as moment from 'moment';
 export class NetworkService {
 
   protocol = 'http://';
-  webserver = 'localhost:8080';
+  webserver = '158.227.173.83:8080';
   api = '';
   httpOptions: any = {
     headers: new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded'),

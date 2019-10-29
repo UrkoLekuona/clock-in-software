@@ -48,7 +48,7 @@ OPTS.server.bindCredentials = pass_file.ldap;
 passport.use(new LdapStrategy(OPTS));
 
 // RSA public key
-const rsa_public_key = fs.readFileSync('jwtRS256.key.pub', 'utf8');
+const rsa_public_key = fs.readFileSync('./jwtRS256.key.pub', 'utf8');
 
 // Mariadb connection options
 const db_opts = { host: 'localhost', user: 'noadmin', password: pass_file.mariadb, database: 'clocks' };
@@ -91,20 +91,32 @@ app.use(function(err, req, res, next) {
 });
 
 // Login attempt, using passport. If authentication succeeds, generate JWT token
-// and send it as a cookie, which will grant authorization for future requests
+// and send it as body, which will grant authorization for future requests
 app.post('/login', passport.authenticate('ldapauth', {session: false}), (req, res) => {
   var privateKey = fs.readFileSync('jwtRS256.key', 'utf8');
   mariadb.createConnection(db_opts).then(conn => {
     conn.query("INSERT IGNORE INTO users VALUES(?)", req.body.username).then((dbres) => {
-      conn.query("SELECT CASE WHEN MAX(outDate) IS NULL THEN MAX(inDate) WHEN MAX(inDate) > MAX(outDate) THEN MAX(inDate) ELSE MAX(outDate) END AS date FROM clock WHERE user=?;", [req.body.username]).then((rows) => {
-        if (rows[0] === undefined || rows[0].date == null) { 
+      /*conn.query("SELECT CASE WHEN MAX(outDate) IS NULL THEN MAX(inDate) WHEN MAX(inDate) > MAX(outDate) THEN MAX(inDate) ELSE MAX(outDate) END AS date FROM clock WHERE user=?;", [req.body.username]).then((rows) => {
+	if (rows[0] === undefined || rows[0].date == null) { 
           date = 'none';
         } else {
           date = new Date(rows[0].date);
         }
-        var token = jwt.sign({ user: req.body.username }, privateKey, { algorithm: 'RS256', expiresIn: '1h' });
-        res.send({ status: 'logged', date: date, token: token });      
-        conn.end().then(() => {}).catch(err => { console.log('[', moment().format('YYYY/MM/DD HH:mm:ss a'), '] DB connection ended abruptly(/login, ', req.body.username,')'); });
+      */
+      conn.query("SELECT inDate, outDate FROM clock WHERE user=? and inDate=(SELECT MAX(inDate) FROM clock WHERE user=?)", [req.body.username, req.body.username]).then(rows => {
+        if (rows[0] === undefined || rows[0].inDate == null) {
+	  date = 'none';
+	  type = 'none';
+	} else if (rows[0].outDate == null) {
+	  date = new Date(rows[0].inDate);
+	  type = 'in';
+	} else {
+	  date = new Date(rows[0].outDate);
+	  type = 'out';
+	}
+	var token = jwt.sign({ user: req.body.username }, privateKey, { algorithm: 'RS256', expiresIn: '1h' });
+        res.send({ status: 'logged', date: date, type: type, token: token });      
+        conn.end();
       });
     });
   })
@@ -113,7 +125,7 @@ app.post('/login', passport.authenticate('ldapauth', {session: false}), (req, re
   });      
 });
 
-// A request is attempting to clock-in/out, verify if it has logged first
+// A request is attempting to clock-in/out
 app.post('/clock', function(req, res, next) {
   var type = req.body.type;
   var ip = req.ip;
@@ -125,7 +137,7 @@ app.post('/clock', function(req, res, next) {
           if (maxIn[0] === undefined || ((maxIn[0].inDate == null && maxIn[0].outDate == null) || (maxIn[0].inDate != null && maxIn[0].outDate != null))) {
 	    conn.query("INSERT INTO clock(user, inDate, inip) VALUES(?, NOW(), ?)", [req.user.user, ip]).then(dbres => {
               res.send({ status: 'ok' });          
-              conn.end().then(() => {}).catch(err => { console.log('[', moment().format('YYYY/MM/DD HH:mm:ss a'), '] DB connection ended abruptly(/clock, ', req.user.user, ', ', type, ', ', ip, ')'); });
+              conn.end();
             })
             .catch(err => {
               error(err, 'DB connection error', 500, ip, res);
@@ -146,7 +158,7 @@ app.post('/clock', function(req, res, next) {
           if (maxIn[0] !== undefined && maxIn[0].inDate != null && maxIn[0].outDate == null) {
 	    conn.query("UPDATE clock SET outDate=NOW(), outip=? WHERE id=?", [ip, maxIn[0].id]).then(dbres => {
               res.send({ status: 'ok' });          
-              conn.end().then(() => {}).catch(err => { console.log('[', moment().format('YYYY/MM/DD HH:mm:ss a'), '] DB connection ended abruptly(/clock, ', req.user.user, ', ', type, ', ', ip, ')'); }); 
+              conn.end(); 
             })
             .catch(err => {
               error(err, 'DB connection error', 500, ip, res);
@@ -187,8 +199,9 @@ app.post('/lastclock', function(req, res, next) {
     } else {
       mariadb.createConnection(db_opts).then(conn => {
         conn.query("SELECT id, inDate, outDate FROM clock WHERE user=? AND outDate=(SELECT MAX(outDate) FROM clock WHERE user=?)", [req.user.user, req.user.user]).then(maxOut => {
-          if (maxOut[0] !== undefined && maxOut[0].outDate != null && maxOut[0].inDate != null) {
-	          res.send({ id: maxOut[0].id, out: maxOut[0].outDate });
+          conn.end();
+	  if (maxOut[0] !== undefined && maxOut[0].outDate != null && maxOut[0].inDate != null) {
+	    res.send({ id: maxOut[0].id, out: maxOut[0].outDate });
           } else if (maxOut[0] !== undefined && maxOut[0].outDate != null && maxOut[0].inDate == null) {
             error('DB error: Last clock is corrupted', 'LastClock', 500, req.ip, res);
           } else {
@@ -215,7 +228,7 @@ app.post('/issue', function(req, res, next) {
           if (req.body.inDate != undefined) {
             conn.query("UPDATE clock SET inDate=?, inConfirmed=0 WHERE id=?", [req.body.inDate, id]).then(upres => {
               res.send({ status: 'ok' });
-              conn.end().then(() => {}).catch(err => { console.log('[', Date.now(), '] DB connection ended abruptly(/issue, ', req.user.user, ')'); });
+              conn.end();
             })
             .catch(err => {
               error(err, 'DB update error', 500, req.ip, res);
@@ -224,7 +237,7 @@ app.post('/issue', function(req, res, next) {
           if (req.body.outDate != undefined) {
             conn.query("UPDATE clock SET outDate=?, outConfirmed=0 WHERE id=?", [req.body.outDate, id]).then(upres => {
               res.send({ status: 'ok' });
-              conn.end().then(() => {}).catch(err => { console.log('[', Date.now(), '] DB connection ended abruptly(/issue, ', req.user.user, ')'); });
+              conn.end();
             })
             .catch(err => {
               error(err, 'DB update error', 500, req.ip, res);
@@ -237,7 +250,7 @@ app.post('/issue', function(req, res, next) {
       } else {
         conn.query("INSERT INTO issue(user, date, text, noted) VALUES(?,NOW(),?,0)", [req.user.user, issue]).then((dbres) => {
           res.send({ status: 'ok' });
-          conn.end().then(() => {}).catch(err => { console.log('[', Date.now(), '] DB connection ended abruptly(/issue, ', req.user.user, ')'); });
+          conn.end();
         })
         .catch(err => {
           error(err, 'DB insert error', 500, req.ip, res);
@@ -252,6 +265,7 @@ app.post('/issue', function(req, res, next) {
   }
 });
 
+// A request wants to inform about an issue
 app.post('/issueform', function(req, res, next) {
   var issue = req.body.issue;
   var date = moment(req.body.date, 'DD/MM/YYYY', true);

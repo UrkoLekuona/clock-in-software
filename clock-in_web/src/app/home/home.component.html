@@ -7,7 +7,7 @@
           <p style="text-align: center;">Conectado como <strong>{{ username }}</strong></p>
           <div *ngIf="isValidDate(date)" style="text-align: center;">
             <p>
-              Fichaste por última vez:
+              {{ type === 'in' ? "Entraste" : "Saliste" }} por última vez:
             </p>
             <p>{{ date | date: "medium" }}</p>
           </div>

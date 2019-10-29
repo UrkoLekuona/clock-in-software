@@ -45,7 +45,8 @@ export class LoginComponent implements OnInit {
         const aux: any = data;
         console.log(aux);
         this.userService.fillFields(value.username, aux.body.token, {
-          date: aux.body.date
+          date: aux.body.date,
+          type: aux.body.type
         });
         this.router.navigate(["/home"]);
       },
