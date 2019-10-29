@@ -94,13 +94,13 @@ body {
 .in-button {
   width: 50%;
   padding: 1.5% !important;
-  background-color: rgb(74, 247, 74);
+  background-color: #7fdb7f;
   font-size: 1.5em;
 }
 
 .out-button {
   width: 50%;
   padding: 1.5% !important;
-  background-color: rgb(233, 64, 64);
+  background-color: #e66e65;
   font-size: 1.5em;
 }
