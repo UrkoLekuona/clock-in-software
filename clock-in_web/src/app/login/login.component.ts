@@ -10,6 +10,7 @@ import { Router } from "@angular/router";
 import { NetworkService } from "../network.service";
 import { UserService } from "../user.service";
 import Swal from "sweetalert2";
+import * as jwt_decode from "jwt-decode";
 
 @Component({
   selector: "app-login",
@@ -44,9 +45,14 @@ export class LoginComponent implements OnInit {
       data => {
         const aux: any = data;
         console.log(aux);
+        let admin = false;
+        if (jwt_decode(aux.body.token).admin == true){
+          admin = true;
+        }
         this.userService.fillFields(value.username, aux.body.token, {
           date: aux.body.date,
-          type: aux.body.type
+          type: aux.body.type,
+          admin: admin
         });
         this.router.navigate(["/home"]);
       },

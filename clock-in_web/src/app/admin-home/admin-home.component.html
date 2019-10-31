@@ -1,0 +1,12 @@
+<div style="margin-left: 2%;">
+  <h4>Selecciona un usuario</h4>
+  <mat-form-field>
+    <mat-label>Usuario</mat-label>
+    <mat-select>
+      <mat-option *ngFor="let user of users" [value]="user.username">
+        {{ user.username }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <button (click)="isAdmin()"></button>
+</div>

@@ -90,6 +90,11 @@ app.use(function(err, req, res, next) {
   }
 });
 
+function isAdmin(req, res, next) {
+  console.log(req.user.admin);
+  return req.user.admin;
+}
+
 // Login attempt, using passport. If authentication succeeds, generate JWT token
 // and send it as body, which will grant authorization for future requests
 app.post('/login', passport.authenticate('ldapauth', {session: false}), (req, res) => {
@@ -114,7 +119,11 @@ app.post('/login', passport.authenticate('ldapauth', {session: false}), (req, re
 	  date = new Date(rows[0].outDate);
 	  type = 'out';
 	}
-	var token = jwt.sign({ user: req.body.username }, privateKey, { algorithm: 'RS256', expiresIn: '1h' });
+	let admin = false;
+	if (req.user.employeeType && req.user.employeeType === 'fichajeAdmin') {
+          admin = true;
+	}
+	var token = jwt.sign({ user: req.body.username, admin: admin }, privateKey, { algorithm: 'RS256', expiresIn: '1h' });
         res.send({ status: 'logged', date: date, type: type, token: token });      
         conn.end();
       });
@@ -306,6 +315,10 @@ app.post('/issueform', function(req, res, next) {
     error('Bad request: text must be between 0 and 2550 characters long', 'Issue', 400, req.ip, res);    
   } 
 });
+
+app.get('/allusers', isAdmin, function(req, res, next) {
+  res.send({  status: 'ok' });
+}); 
 
 // At this point, no other route has been matched so we assume 404
 app.use(function(req, res, next){

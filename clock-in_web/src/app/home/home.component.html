@@ -4,11 +4,11 @@
     <div class="login-container">
       <form>
         <div class="login-box-body" style="color:black">
-          <p style="text-align: center;">Conectado como <strong>{{ username }}</strong></p>
+          <p style="text-align: center;">
+            Conectado como <strong>{{ username }}</strong>
+          </p>
           <div *ngIf="isValidDate(date)" style="text-align: center;">
-            <p>
-              {{ type === 'in' ? "Entraste" : "Saliste" }} por última vez:
-            </p>
+            <p>{{ type === "in" ? "Entraste" : "Saliste" }} por última vez:</p>
             <p>{{ date | date: "medium" }}</p>
           </div>
           <button mat-raised-button class="in-button" (click)="clock('in')">
@@ -21,6 +21,11 @@
           <br />
           <button mat-raised-button class="login-button" (click)="issue()">
             Incidencia
+          </button>
+          <br />
+          <br />
+          <button mat-raised-button class="login-button" (click)="adminHome()">
+            Panel de administración
           </button>
           <br />
           <br />

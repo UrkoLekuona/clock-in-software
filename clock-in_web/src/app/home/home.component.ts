@@ -14,6 +14,7 @@ export class HomeComponent implements OnInit {
   username = this.userService.username;
   date = new Date(this.userService.lastLogin.date);
   type = this.userService.lastLogin.type;
+  admin = this.userService.lastLogin.admin;
   alert = Swal.mixin({
     confirmButtonText: "Vale",
     allowOutsideClick: false,
@@ -37,7 +38,8 @@ export class HomeComponent implements OnInit {
         this.type = value;
         this.userService.fillFields(this.username, this.userService.token, {
           date: this.date.toString(),
-          type: value
+          type: value,
+          admin: this.admin
         });
       },
       error => {
@@ -161,5 +163,9 @@ export class HomeComponent implements OnInit {
   issue() {
     //this.router.navigate(["/issue"]);
     this.router.navigate(["/issueForm"]);
+  }
+
+  adminHome() {
+    this.router.navigate(["/adminHome"]);
   }
 }

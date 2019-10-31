@@ -14,6 +14,7 @@ import {
   MatCardModule,
   MatDatepickerModule,
   MatNativeDateModule,
+  MatSelectModule,
   MatFormFieldModule,
   MAT_DATE_LOCALE,
   MatDividerModule
@@ -28,9 +29,10 @@ import { RequestInterceptor } from "./request.interceptor";
 import { HomeComponent } from "./home/home.component";
 import { IssueComponent } from "./issue/issue.component";
 import { IssueFormComponent } from './issue-form/issue-form.component';
+import { AdminHomeComponent } from './admin-home/admin-home.component';
 
 @NgModule({
-  declarations: [AppComponent, LoginComponent, HomeComponent, IssueComponent, IssueFormComponent],
+  declarations: [AppComponent, LoginComponent, HomeComponent, IssueComponent, IssueFormComponent, AdminHomeComponent],
   imports: [
     BrowserModule,
     MatButtonModule,
@@ -43,6 +45,7 @@ import { IssueFormComponent } from './issue-form/issue-form.component';
     MatDatepickerModule,
     MatNativeDateModule,
     MatFormFieldModule,
+    MatSelectModule,
     MatDividerModule,
     AppRoutingModule,
     BrowserAnimationsModule,
