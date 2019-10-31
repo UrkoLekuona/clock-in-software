@@ -143,7 +143,7 @@ app.post('/clock', function(req, res, next) {
               error(err, 'DB connection error', 500, ip, res);
             });
           } else if (maxIn[0] !== undefined && maxIn[0].outDate == null) {
-            error('Bad request: unpaired indate', 'Clock in', 400, ip, res);
+            error('Bad request: unpaired indate for user ' + req.user.user, 'Clock in', 400, ip, res);
           } else {
             error('Bad request: unknown error', 'Clock in', 400, ip, res);
           }
@@ -164,7 +164,7 @@ app.post('/clock', function(req, res, next) {
               error(err, 'DB connection error', 500, ip, res);
             });
           } else if (maxIn[0] !== undefined && (maxIn[0].inDate == null || maxIn[0].outDate != null)) {
-            error('Bad request: unpaired outdate', 'Clock out', 400, ip, res);
+            error('Bad request: unpaired outdate for user ' + req.user.user, 'Clock out', 400, ip, res);
           } else {
             error('Bad request: unknown error', 'Clock out', 400, ip, res);
           } 
@@ -189,7 +189,7 @@ app.post('/lastclock', function(req, res, next) {
           if (maxIn[0] !== undefined && maxIn[0].inDate != null && maxIn[0].outDate == null) {
 	    res.send({ id: maxIn[0].id, in: maxIn[0].inDate });
           } else {
-            error('Bad request: Last clock-in is right', 'LastClock', 400, req.ip, res);
+            error('Bad request: Last clock-in is right for user ' + req.user.user, 'LastClock', 400, req.ip, res);
           }
         })
       })
@@ -205,7 +205,7 @@ app.post('/lastclock', function(req, res, next) {
           } else if (maxOut[0] !== undefined && maxOut[0].outDate != null && maxOut[0].inDate == null) {
             error('DB error: Last clock is corrupted', 'LastClock', 500, req.ip, res);
           } else {
-            error('Bad request: Last clock-out is right', 'LastClock', 400, req.ip, res);
+            error('Bad request: Last clock-out is right for user ' + req.user.user, 'LastClock', 400, req.ip, res);
           }
         })
       })
@@ -214,12 +214,14 @@ app.post('/lastclock', function(req, res, next) {
       });
     }
   } else {
-    error('Bad request: not a valid type', 'LastClock', 400, req.ip, res);
+    error('Bad request: not a valid type from user ' + req.user.user, 'LastClock', 400, req.ip, res);
   }
 });
 
 // A request is attempting to write an issue
 app.post('/issue', function(req, res, next) {
+  res.end();
+  return;
   var issue = req.body.issue;
   if (issue !== undefined && issue.text !== undefined && issue.text.length < 2550) {
     mariadb.createConnection(db_opts).then(conn => {
@@ -269,7 +271,6 @@ app.post('/issue', function(req, res, next) {
 app.post('/issueform', function(req, res, next) {
   var issue = req.body.issue;
   var date = moment(req.body.date, 'DD/MM/YYYY', true);
-  console.log(req.body.date, ' ', date.isValid());
   if (issue !== undefined && issue.length < 2550 && date.isValid()) {
     var ldapsearch = 'ldapsearch -LLL -H \'' + OPTS.server.url + '\' -x -D \'' + OPTS.server.bindDN + '\' -w \'' + pass_file.ldap + '\' -b \'' + OPTS.server.searchBase + '\' "(uid=' + req.user.user + ')" | grep displayName: | cut -d\':\' -f2';
     exec(ldapsearch, (err, stdout, stderr) => {
@@ -292,7 +293,7 @@ app.post('/issueform', function(req, res, next) {
         to: 'incidencias@dipc.org', // list of receivers
         subject: 'Incidencia' + fullname, // Subject line
         html: '<h1>Incidencia de' + fullname + '</h1>' +
-              '<p>Fecha: ' + date.format('DD/MM/YYYY') + '</p>' +
+              '<p>Fecha de la incidencia: ' + date.format('DD/MM/YYYY') + '</p>' +
               '<p>Razón: ' + issue + '</p>'
       }, (err, info) => {
         if (err) {
