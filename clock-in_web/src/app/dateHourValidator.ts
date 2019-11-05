@@ -15,4 +15,11 @@ export class DateHourValidator {
     }
     return null;
   }
+
+  static dateBeforeValidator(minDate: AbstractControl, maxDate: AbstractControl) {
+    if (minDate && minDate.value && maxDate && maxDate.value && moment(minDate.value).isAfter(moment(maxDate.value))) {
+      return {'dateBeforeValidator': true};
+    }
+    return null;
+  }
 }

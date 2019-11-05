@@ -1,12 +1,115 @@
-<div style="margin-left: 2%;">
-  <h4>Selecciona un usuario</h4>
-  <mat-form-field>
-    <mat-label>Usuario</mat-label>
-    <mat-select>
-      <mat-option *ngFor="let user of users" [value]="user.username">
-        {{ user.username }}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
-  <button (click)="isAdmin()"></button>
+<div class="centered-layout">
+  <div *ngIf="!loading">
+    <h4>Selecciona un usuario</h4>
+    <mat-form-field>
+      <mat-label>Usuario</mat-label>
+      <mat-select
+        [(value)]="selectedUser.username"
+        (selectionChange)="loadUser($event.value)"
+      >
+        <mat-option *ngFor="let user of users" [value]="user.username">
+          {{ user.username }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-card
+      [class.mat-elevation-z24]="true"
+      *ngIf="selectedUser !== undefined"
+    >
+      <mat-card-title>Fichajes</mat-card-title>
+      <mat-card-subtitle>
+        <form [formGroup]="clockDatesForm">
+          <mat-form-field style="margin-right: 5%;">
+            <mat-label>Desde</mat-label>
+            <input
+              #clock_since_input
+              formControlName="clock_since"
+              matInput
+              [matDatepicker]="sincePicker"
+              placeholder="DD/MM/AAAA"
+              (click)="sincePicker.open()"
+              (ngModelChange)="
+                clockDatesForm.valid && clocksBetweenDates(clockDatesForm.value)
+              "
+            />
+            <mat-datepicker-toggle
+              matSuffix
+              [for]="sincePicker"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #sincePicker></mat-datepicker>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Hasta</mat-label>
+            <input
+              #clock_until_input
+              formControlName="clock_until"
+              matInput
+              [matDatepicker]="untilPicker"
+              placeholder="DD/MM/AAAA"
+              (click)="untilPicker.open()"
+              (ngModelChange)="
+                clockDatesForm.valid && clocksBetweenDates(clockDatesForm.value)
+              "
+            />
+            <mat-datepicker-toggle
+              matSuffix
+              [for]="untilPicker"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #untilPicker></mat-datepicker>
+          </mat-form-field>
+        </form>
+      </mat-card-subtitle>
+      <mat-card-content>
+        <div *ngIf="!selectedUser.clocks?.length > 0">
+          <h4>Este usuario no tiene fichajes entre estas fechas</h4>
+        </div>
+        <div *ngIf="selectedUser.clocks?.length > 0">
+          <table mat-table class="clockTable" [dataSource]="dataSource">
+            <ng-container matColumnDef="inDate">
+              <th mat-header-cell *matHeaderCellDef>Fecha entrada</th>
+              <td mat-cell *matCellDef="let clock">{{ clock.inDate }}</td>
+            </ng-container>
+            <ng-container matColumnDef="inIp">
+              <th mat-header-cell *matHeaderCellDef>IP entrada</th>
+              <td mat-cell *matCellDef="let clock">{{ clock.inIp }}</td>
+            </ng-container>
+            <ng-container matColumnDef="outDate">
+              <th mat-header-cell *matHeaderCellDef>Fecha salida</th>
+              <td mat-cell *matCellDef="let clock">{{ clock.outDate }}</td>
+            </ng-container>
+            <ng-container matColumnDef="outIp">
+              <th mat-header-cell *matHeaderCellDef>IP salida</th>
+              <td mat-cell *matCellDef="let clock">{{ clock.outIp }}</td>
+            </ng-container>
+            <ng-container matColumnDef="update">
+              <th mat-header-cell *matHeaderCellDef>Actualizar</th>
+              <td mat-cell *matCellDef="let clock">
+                <button
+                  mat-icon-button
+                  color="accent"
+                  (click)="update(clock.id)"
+                >
+                  <mat-icon class="mat-18">save</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    <br />
+    <mat-card
+      [class.mat-elevation-z24]="true"
+      *ngIf="selectedUser !== undefined"
+    >
+      <mat-card-title>Incidencias</mat-card-title>
+    </mat-card>
+  </div>
+  <div *ngIf="loading" style="margin-top: 5%;">
+    <h4>Cargando...</h4>
+    <mat-spinner mode="indeterminate" class="centered-spinner"></mat-spinner>
+  </div>
 </div>

@@ -63,4 +63,13 @@ export class NetworkService {
   allUsers() {
     return this.http.get(this.protocol + this.webserver + this.api + '/allUsers', this.httpOptions);
   }
+
+  clocksBetweenDates(value) {
+    let body = new URLSearchParams();
+    body.set('minDate', moment(value.clock_since).format('DD/MM/YYYY'));
+    body.set('maxDate', moment(value.clock_until).format('DD/MM/YYYY'));
+    let options = this.httpOptions;
+    options.observe = 'response' as "body";
+    return this.http.post(this.protocol + this.webserver + this.api + '/clocksBetweenDates', body.toString(), options);
+  }
 }

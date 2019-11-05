@@ -46,7 +46,7 @@ export class HomeComponent implements OnInit {
         console.log(error);
         switch (error.status) {
           case 400:
-            if (error.error.status === "Bad request: unpaired outdate") {
+            if (error.error.status.includes("Bad request: unpaired outdate")) {
               this.alert.fire({
                 title: "¿Abrir incidencia?",
                 text: "Estás intentando salir sin haber marcado antes una hora de entrada. Si no has podido o se te ha olvidado, ¿quieres abrir una incidencia?",
@@ -58,7 +58,7 @@ export class HomeComponent implements OnInit {
                   this.lastClock("out");
                 }
               });
-            } else if (error.error.status === "Bad request: unpaired indate") {
+            } else if (error.error.status.includes("Bad request: unpaired indate")) {
               this.alert.fire({
                 title: "¿Abrir incidencia?",
                 text: "Estás intentado entrar, pero la última vez no marcaste la hora de salida. Si no pudiste o se te olvidó, ¿quieres abrir una incidencia?",
@@ -82,7 +82,7 @@ export class HomeComponent implements OnInit {
             this.alert
               .fire({
                 title: "Error",
-                text: "Acceso denegado. Token no válido",
+                text: "Acceso denegado. La sesión ha expirado.",
                 type: "error"
               })
               .then(res => {

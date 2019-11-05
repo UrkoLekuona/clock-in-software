@@ -16,6 +16,8 @@ import {
   MatNativeDateModule,
   MatSelectModule,
   MatFormFieldModule,
+  MatTableModule,
+  MatProgressSpinnerModule,
   MAT_DATE_LOCALE,
   MatDividerModule
 } from "@angular/material";
@@ -45,8 +47,10 @@ import { AdminHomeComponent } from './admin-home/admin-home.component';
     MatDatepickerModule,
     MatNativeDateModule,
     MatFormFieldModule,
+    MatTableModule,
     MatSelectModule,
     MatDividerModule,
+    MatProgressSpinnerModule,
     AppRoutingModule,
     BrowserAnimationsModule,
     ReactiveFormsModule,

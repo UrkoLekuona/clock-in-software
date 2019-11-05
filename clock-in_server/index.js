@@ -3,7 +3,7 @@ var express      = require('express'),
     passport     = require('passport'),
     bodyParser   = require('body-parser'),
     cookieParser = require('cookie-parser'),
-    jwt 	       = require('jsonwebtoken'),
+    jwt 	     = require('jsonwebtoken'),
     fs           = require('file-system'),
     mariadb      = require('mariadb'),
     pass_file    = require('./password.key.json'),
@@ -85,14 +85,17 @@ app.use(expressJwt({
 app.use(function(err, req, res, next) {
   if(err.name === 'UnauthorizedError' && req.path != '/login') {
     error('Invalid token', 'Invalid token', 401, '', res);
-  } else{
+  } else {
     next();
   }
 });
 
 function isAdmin(req, res, next) {
-  console.log(req.user.admin);
-  return req.user.admin;
+  if (req.user.admin) {
+    next();
+  } else {
+    error(req.user.user + ' is trying to access ' + req.path + ' without being admin.', 'Not admin', 401, req.ip, res);
+  }
 }
 
 // Login attempt, using passport. If authentication succeeds, generate JWT token
@@ -317,8 +320,43 @@ app.post('/issueform', function(req, res, next) {
 });
 
 app.get('/allusers', isAdmin, function(req, res, next) {
-  res.send({  status: 'ok' });
+  mariadb.createConnection(db_opts).then(conn => {
+    conn.query("SELECT username FROM users").then((dbres) => {
+      if (dbres != undefined) {
+        res.send({  status: 'ok', users: dbres });
+        conn.end();
+      } else {
+	error('Error getting all users', 'AllUsers', 500, req.ip, res);
+      }
+    })
+    .catch(err => {
+      error(err, 'DB connection error', 500, req.ip, res);      
+    });
+  });
 }); 
+
+app.post('/clocksBetweenDates', isAdmin, function(req, res, next) {
+  let minDate = moment(req.body.minDate, 'DD/MM/YYYY', true);
+  let maxDate = moment(req.body.maxDate, 'DD/MM/YYYY', true);
+  if (minDate.isValid() && maxDate.isValid() && minDate.isSameOrBefore(maxDate)) {
+    mariadb.createConnection(db_opts).then(conn => {
+      conn.query("SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND outDate<=?", [req.user.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((dbres) => {
+        if (dbres != undefined) {
+          res.send({ status: 'ok', clocks: dbres});
+          conn.end();
+        } else {
+          error('Error getting all clocks', 'ClocksBetweenDates', 500, req.ip, res);
+        }
+      })
+      .catch(err => {
+        error(err, 'DB connection error', 500, req.ip, res);
+      });
+    });
+    //res.send({ status: 'ok', clocks: []});
+  } else {
+    error('Bad request: Invalid dates', 'ClocksBetweenDates', 400, req.ip, res);
+  }
+});
 
 // At this point, no other route has been matched so we assume 404
 app.use(function(req, res, next){
