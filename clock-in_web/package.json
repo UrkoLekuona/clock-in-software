@@ -22,12 +22,15 @@
     "@angular/platform-browser": "^8.2.11",
     "@angular/platform-browser-dynamic": "^8.2.11",
     "@angular/router": "^8.2.11",
+    "cdk-table-exporter": "^1.2.2",
     "jwt-decode": "^2.2.0",
+    "mat-table-exporter": "^1.2.2",
     "moment": "^2.24.0",
     "ngx-material-timepicker": "^5.2.1",
     "rxjs": "~6.4.0",
     "sweetalert2": "^8.18.6",
     "tslib": "^1.10.0",
+    "xlsx": "^0.15.1",
     "zone.js": "~0.9.1"
   },
   "devDependencies": {

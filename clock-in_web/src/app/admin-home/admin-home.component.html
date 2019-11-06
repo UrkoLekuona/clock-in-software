@@ -63,27 +63,31 @@
         <div *ngIf="!selectedUser.clocks?.length > 0">
           <h4>Este usuario no tiene fichajes entre estas fechas</h4>
         </div>
-        <div *ngIf="selectedUser.clocks?.length > 0">
-          <table mat-table class="clockTable" [dataSource]="dataSource">
+        <div *ngIf="selectedUser.clocks?.length > 0" class="table-container">
+          <mat-table matTableExporter class="clockTable" [dataSource]="dataSource" #exporter="matTableExporter">
+            <ng-container matColumnDef="id">
+              <mat-header-cell *matHeaderCellDef>Identificador</mat-header-cell>
+              <mat-cell *matCellDef="let clock">{{ clock.id }}</mat-cell>
+            </ng-container>
             <ng-container matColumnDef="inDate">
-              <th mat-header-cell *matHeaderCellDef>Fecha entrada</th>
-              <td mat-cell *matCellDef="let clock">{{ clock.inDate }}</td>
+              <mat-header-cell *matHeaderCellDef>Fecha entrada</mat-header-cell>
+              <mat-cell *matCellDef="let clock">{{ clock.inDate }}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="inIp">
-              <th mat-header-cell *matHeaderCellDef>IP entrada</th>
-              <td mat-cell *matCellDef="let clock">{{ clock.inIp }}</td>
+              <mat-header-cell *matHeaderCellDef>IP entrada</mat-header-cell>
+              <mat-cell *matCellDef="let clock">{{ clock.inIp }}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="outDate">
-              <th mat-header-cell *matHeaderCellDef>Fecha salida</th>
-              <td mat-cell *matCellDef="let clock">{{ clock.outDate }}</td>
+              <mat-header-cell *matHeaderCellDef>Fecha salida</mat-header-cell>
+              <mat-cell *matCellDef="let clock">{{ clock.outDate }}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="outIp">
-              <th mat-header-cell *matHeaderCellDef>IP salida</th>
-              <td mat-cell *matCellDef="let clock">{{ clock.outIp }}</td>
+              <mat-header-cell *matHeaderCellDef>IP salida</mat-header-cell>
+              <mat-cell *matCellDef="let clock">{{ clock.outIp }}</mat-cell>
             </ng-container>
             <ng-container matColumnDef="update">
-              <th mat-header-cell *matHeaderCellDef>Actualizar</th>
-              <td mat-cell *matCellDef="let clock">
+              <mat-header-cell *matHeaderCellDef>Actualizar</mat-header-cell>
+              <mat-cell *matCellDef="let clock">
                 <button
                   mat-icon-button
                   color="accent"
@@ -91,14 +95,21 @@
                 >
                   <mat-icon class="mat-18">save</mat-icon>
                 </button>
-              </td>
+              </mat-cell>
             </ng-container>
 
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-          </table>
+            <mat-header-row
+              *matHeaderRowDef="displayedColumns"
+            ></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+          </mat-table>
         </div>
       </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button (click)="exporter.exportTable('xlsx', {fileName:'test', sheet: 'sheet_name', Props: {Author: 'Talha'}})">
+          <mat-icon class="mat-18">save</mat-icon> Exportar a Excel
+        </button>
+      </mat-card-actions>
     </mat-card>
     <br />
     <mat-card

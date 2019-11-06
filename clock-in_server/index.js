@@ -3,7 +3,7 @@ var express      = require('express'),
     passport     = require('passport'),
     bodyParser   = require('body-parser'),
     cookieParser = require('cookie-parser'),
-    jwt 	     = require('jsonwebtoken'),
+    jwt 	 = require('jsonwebtoken'),
     fs           = require('file-system'),
     mariadb      = require('mariadb'),
     pass_file    = require('./password.key.json'),
@@ -338,10 +338,14 @@ app.get('/allusers', isAdmin, function(req, res, next) {
 app.post('/clocksBetweenDates', isAdmin, function(req, res, next) {
   let minDate = moment(req.body.minDate, 'DD/MM/YYYY', true);
   let maxDate = moment(req.body.maxDate, 'DD/MM/YYYY', true);
-  if (minDate.isValid() && maxDate.isValid() && minDate.isSameOrBefore(maxDate)) {
+  if (req.body.user && minDate.isValid() && maxDate.isValid() && minDate.isSameOrBefore(maxDate)) {
     mariadb.createConnection(db_opts).then(conn => {
-      conn.query("SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND outDate<=?", [req.user.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((dbres) => {
+      conn.query("SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND outDate<=?", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((dbres) => {
         if (dbres != undefined) {
+          dbres.forEach(row => {
+            row['inDate'] = moment(row.inDate).format('DD/MM/YYYY HH:mm:ss A');
+            row['outDate'] = moment(row.outDate).format('DD/MM/YYYY HH:mm:ss A');
+	  });
           res.send({ status: 'ok', clocks: dbres});
           conn.end();
         } else {

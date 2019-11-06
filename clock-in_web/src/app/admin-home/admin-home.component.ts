@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ViewChild, ElementRef } from "@angular/core";
 import {
   FormControl,
   FormGroup,
@@ -10,7 +10,8 @@ import Swal from "sweetalert2";
 import { NetworkService } from "../network.service";
 import { DateHourValidator } from "../dateHourValidator";
 import { UserService } from "../user.service";
-import { Router } from '@angular/router';
+import { Router } from "@angular/router";
+import { MatTableDataSource } from "@angular/material";
 
 export interface Clock {
   id: number;
@@ -40,9 +41,10 @@ export class AdminHomeComponent implements OnInit {
     allowOutsideClick: false,
     allowEscapeKey: false
   });
+  @ViewChild('exporter', {static: false}) exporter: ElementRef;
 
-  public displayedColumns = ['inDate', 'inIp', 'outDate', 'outIp', 'update'];
-  public dataSource = [];
+  public displayedColumns = ["id", "inDate", "inIp", "outDate", "outIp"];
+  public dataSource: MatTableDataSource<Clock>;
 
   constructor(
     private network: NetworkService,
@@ -98,52 +100,60 @@ export class AdminHomeComponent implements OnInit {
     );
     if (this.clockDatesForm.valid && !invalidDates) {
       this.loading = true;
-      this.network.clocksBetweenDates(value).subscribe(data => {
-        const aux: any = data;
-        this.selectedUser = { username: this.selectedUser.username, clocks: aux.body.clocks};
-        this.dataSource = this.selectedUser.clocks;
-        console.log(aux.body.clocks);
-      }, err => {
-        console.log(err);
-        switch (err.status) {
-          case 400:
-            this.alert.fire({
-              title: "Error",
-              text:
-                "Las fechas elegidas no son válidas",
-              type: "error"
-            });
-            break;
-          case 401:
-            this.alert
-              .fire({
+      value["user"] = this.selectedUser.username;
+      this.network.clocksBetweenDates(value).subscribe(
+        data => {
+          const aux: any = data;
+          this.selectedUser = {
+            username: this.selectedUser.username,
+            clocks: aux.body.clocks
+          };
+          this.dataSource = new MatTableDataSource<Clock>(this.selectedUser.clocks);
+          console.log(aux.body.clocks);
+        },
+        err => {
+          console.log(err);
+          switch (err.status) {
+            case 400:
+              this.alert.fire({
                 title: "Error",
-                text: "Acceso denegado. La sesión ha expirado.",
+                text: "Las fechas elegidas no son válidas",
                 type: "error"
-              })
-              .then(res => {
-                this.userService.logout();
-                this.router.navigate(["/login"]);
               });
-            break;
-          case 500:
-            this.alert.fire({
-              title: "Error",
-              text: "Fallo del servidor. Contacte con un administrador",
-              type: "error"
-            });
-            break;
-          default:
-            this.alert.fire({
-              title: "Error",
-              text: "Fallo desconocido. Contacte con un administrador",
-              type: "error"
-            });
+              break;
+            case 401:
+              this.alert
+                .fire({
+                  title: "Error",
+                  text: "Acceso denegado. La sesión ha expirado.",
+                  type: "error"
+                })
+                .then(res => {
+                  this.userService.logout();
+                  this.router.navigate(["/login"]);
+                });
+              break;
+            case 500:
+              this.alert.fire({
+                title: "Error",
+                text: "Fallo del servidor. Contacte con un administrador",
+                type: "error"
+              });
+              break;
+            default:
+              this.alert.fire({
+                title: "Error",
+                text: "Fallo desconocido. Contacte con un administrador",
+                type: "error"
+              });
+          }
+          this.loading = false;
+        },
+        () => {
+          this.loading = false;
         }
-        this.loading = false;
-      }, () => {
-        this.loading = false;
-      });
+      );
     }
   }
+
 }

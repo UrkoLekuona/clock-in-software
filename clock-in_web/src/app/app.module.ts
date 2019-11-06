@@ -22,6 +22,8 @@ import {
   MatDividerModule
 } from "@angular/material";
 
+import { MatTableExporterModule } from "mat-table-exporter";
+
 import { NgxMaterialTimepickerModule } from 'ngx-material-timepicker';
 
 import { AppComponent } from "./app.component";
@@ -51,6 +53,7 @@ import { AdminHomeComponent } from './admin-home/admin-home.component';
     MatSelectModule,
     MatDividerModule,
     MatProgressSpinnerModule,
+    MatTableExporterModule,
     AppRoutingModule,
     BrowserAnimationsModule,
     ReactiveFormsModule,

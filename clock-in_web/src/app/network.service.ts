@@ -68,6 +68,7 @@ export class NetworkService {
     let body = new URLSearchParams();
     body.set('minDate', moment(value.clock_since).format('DD/MM/YYYY'));
     body.set('maxDate', moment(value.clock_until).format('DD/MM/YYYY'));
+    body.set('user', value.user);
     let options = this.httpOptions;
     options.observe = 'response' as "body";
     return this.http.post(this.protocol + this.webserver + this.api + '/clocksBetweenDates', body.toString(), options);

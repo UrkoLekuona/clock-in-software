@@ -124,6 +124,11 @@ body {
   stroke: #0099e0;
 }
 
+.table-container {
+  max-height: 300px;
+  overflow: auto;
+}
+
 table.clockTable {
   width: 100%;
   overflow-x: auto;
@@ -131,6 +136,17 @@ table.clockTable {
   max-height: 100px;
 }
 
-th.mat-header-cell {
+mat-table {
+  text-align: center !important;
+  width: 100%;
+}
+
+.mat-header-cell {
   text-align: center;
+  justify-content: center;
+}
+
+.mat-cell {
+  text-align: center;
+  justify-content: center;
 }
