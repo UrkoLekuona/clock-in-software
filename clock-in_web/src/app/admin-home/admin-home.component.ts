@@ -78,8 +78,36 @@ export class AdminHomeComponent implements OnInit {
         this.users = users;
         this.selectedUser = this.users[0];
       },
-      error => {
-        console.log(error);
+      err => {
+        console.log(err);
+        switch (err.status) {
+          case 401:
+            this.alert
+              .fire({
+                title: "Error",
+                text: "Acceso denegado. La sesión ha expirado.",
+                type: "error"
+              })
+              .then(res => {
+                this.userService.logout();
+                this.router.navigate(["/login"]);
+              });
+            break;
+          case 500:
+            this.alert.fire({
+              title: "Error",
+              text: "Fallo del servidor. Contacte con un administrador",
+              type: "error"
+            });
+            break;
+          default:
+            this.alert.fire({
+              title: "Error",
+              text: "Fallo desconocido. Contacte con un administrador",
+              type: "error"
+            });
+        }
+        this.loading = false;
       },
       () => {
         this.loading = false;

@@ -92,7 +92,8 @@ app.use(function(err, req, res, next) {
 
 function isAdmin(req, res, next) {
   if (req.user.admin) {
-    next();
+    error(req.user.user + ' is trying to access ' + req.path + ' without being admin.', 'Not admin', 401, req.ip, res);
+    //next();
   } else {
     error(req.user.user + ' is trying to access ' + req.path + ' without being admin.', 'Not admin', 401, req.ip, res);
   }

@@ -106,7 +106,7 @@
         </div>
       </mat-card-content>
       <mat-card-actions>
-        <button mat-raised-button (click)="exporter.exportTable('xlsx', {fileName:'test', sheet: 'sheet_name', Props: {Author: 'Talha'}})">
+        <button mat-raised-button (click)="exporter.exportTable('xlsx', {fileName:'Fichajes ' + selectedUser.username, sheet: 'Fichajes', Props: {Author: ''}})">
           <mat-icon class="mat-18">save</mat-icon> Exportar a Excel
         </button>
       </mat-card-actions>

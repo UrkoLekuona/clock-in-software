@@ -22,12 +22,14 @@
           <button mat-raised-button class="login-button" (click)="issue()">
             Incidencia
           </button>
-          <br />
-          <br />
-          <button mat-raised-button class="login-button" (click)="adminHome()">
-            Panel de administración
-          </button>
-          <br />
+          <br/>
+          <div *ngIf="false && admin">
+            <br />
+            <button mat-raised-button class="login-button" (click)="adminHome()">
+              Panel de administración
+            </button>
+            <br />
+          </div>
           <br />
           <button mat-raised-button class="login-button" (click)="logout()">
             Desconectar

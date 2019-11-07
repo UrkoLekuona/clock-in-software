@@ -41,6 +41,14 @@ export class HomeComponent implements OnInit {
           type: value,
           admin: this.admin
         });
+        Swal.fire({
+          title: "Has fichado correctamente",
+          type: "success",
+          toast: true,
+          position: 'bottom',
+          showConfirmButton: false,
+          timer: 3000
+        });
       },
       error => {
         console.log(error);
