@@ -60,7 +60,7 @@
         </form>
       </mat-card-subtitle>
       <mat-card-content>
-        <div *ngIf="!selectedUser.clocks?.length > 0">
+        <div *ngIf="selectedUser.clocks === undefined || selectedUser.clocks?.length == 0">
           <h4>Este usuario no tiene fichajes entre estas fechas</h4>
         </div>
         <div *ngIf="selectedUser.clocks?.length > 0" class="table-container">
@@ -91,7 +91,6 @@
                 <button
                   mat-icon-button
                   color="accent"
-                  (click)="update(clock.id)"
                 >
                   <mat-icon class="mat-18">save</mat-icon>
                 </button>
@@ -106,7 +105,7 @@
         </div>
       </mat-card-content>
       <mat-card-actions>
-        <button mat-raised-button (click)="exporter.exportTable('xlsx', {fileName:'Fichajes ' + selectedUser.username, sheet: 'Fichajes', Props: {Author: ''}})">
+        <button mat-raised-button (click)="exporter && exporter.exportTable('xlsx', {fileName:'Fichajes ' + selectedUser.username, sheet: 'Fichajes', Props: {Author: ''}})">
           <mat-icon class="mat-18">save</mat-icon> Exportar a Excel
         </button>
       </mat-card-actions>

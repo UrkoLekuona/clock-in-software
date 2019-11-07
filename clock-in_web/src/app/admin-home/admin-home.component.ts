@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from "@angular/core";
+import { Component, OnInit, ViewChild } from "@angular/core";
 import {
   FormControl,
   FormGroup,
@@ -11,7 +11,7 @@ import { NetworkService } from "../network.service";
 import { DateHourValidator } from "../dateHourValidator";
 import { UserService } from "../user.service";
 import { Router } from "@angular/router";
-import { MatTableDataSource } from "@angular/material";
+import { MatTableDataSource, MatTable } from "@angular/material";
 
 export interface Clock {
   id: number;
@@ -41,7 +41,7 @@ export class AdminHomeComponent implements OnInit {
     allowOutsideClick: false,
     allowEscapeKey: false
   });
-  @ViewChild('exporter', {static: false}) exporter: ElementRef;
+  @ViewChild('exporter', {static: false}) exporter: any;
 
   public displayedColumns = ["id", "inDate", "inIp", "outDate", "outIp"];
   public dataSource: MatTableDataSource<Clock>;
