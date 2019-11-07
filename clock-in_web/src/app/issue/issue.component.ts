@@ -69,7 +69,7 @@ export class IssueComponent implements OnInit {
             this.alert
               .fire({
                 title: "Error",
-                text: "Acceso denegado. Token no válido",
+                text: "Acceso denegado. La sesión ha expirado.",
                 type: "error"
               })
               .then(res => {

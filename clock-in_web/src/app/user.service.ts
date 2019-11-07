@@ -9,25 +9,28 @@ export class UserService {
   lastLogin: {
     date: string;
     type: string;
+    admin: boolean
   } = {
     date: "",
-    type: ""
+    type: "",
+    admin: false
   };
 
   constructor() {}
 
-  fillFields(username, token?, lastLogin?: { date: string, type: string }) {
+  fillFields(username, token?, lastLogin?: { date: string, type: string, admin: boolean }) {
     this.username = username;
     if (token) this.token = token;
     if (lastLogin) {
       if (lastLogin.date) this.lastLogin.date = lastLogin.date;
       if (lastLogin.type) this.lastLogin.type = lastLogin.type;
+      if (lastLogin.admin) this.lastLogin.admin = lastLogin.admin;
     }
   }
 
   logout() {
     this.username = "";
     this.token = "";
-    this.lastLogin = { date: "", type: "" };
+    this.lastLogin = { date: "", type: "", admin: false };
   }
 }

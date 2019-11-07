@@ -9,7 +9,7 @@ import * as moment from 'moment';
 export class NetworkService {
 
   protocol = 'http://';
-  webserver = '158.227.173.83:8080';
+  webserver = 'localhost:8080';
   api = '';
   httpOptions: any = {
     headers: new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded'),
@@ -58,5 +58,19 @@ export class NetworkService {
     let options = this.httpOptions;
     options.observe = 'response' as "body";
     return this.http.post(this.protocol + this.webserver + this.api + '/issueform', body.toString(), options);
+  }
+
+  allUsers() {
+    return this.http.get(this.protocol + this.webserver + this.api + '/allUsers', this.httpOptions);
+  }
+
+  clocksBetweenDates(value) {
+    let body = new URLSearchParams();
+    body.set('minDate', moment(value.clock_since).format('DD/MM/YYYY'));
+    body.set('maxDate', moment(value.clock_until).format('DD/MM/YYYY'));
+    body.set('user', value.user);
+    let options = this.httpOptions;
+    options.observe = 'response' as "body";
+    return this.http.post(this.protocol + this.webserver + this.api + '/clocksBetweenDates', body.toString(), options);
   }
 }

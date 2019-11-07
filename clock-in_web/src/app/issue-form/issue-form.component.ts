@@ -21,7 +21,7 @@ export class IssueFormComponent implements OnInit {
   issueForm: FormGroup;
   text: string;
   waiting: boolean = false;
-  date: { value: string } = { value: "a" };
+  date: { value: string } = { value: "" };
   alert = Swal.mixin({
     confirmButtonText: "Vale",
     allowOutsideClick: false,
@@ -79,7 +79,7 @@ export class IssueFormComponent implements OnInit {
             this.alert
               .fire({
                 title: "Error",
-                text: "Acceso denegado, token no válido.",
+                text: "Acceso denegado. La sesión ha expirado.",
                 type: "error"
               })
               .then(res => {

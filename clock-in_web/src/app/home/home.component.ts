@@ -14,6 +14,7 @@ export class HomeComponent implements OnInit {
   username = this.userService.username;
   date = new Date(this.userService.lastLogin.date);
   type = this.userService.lastLogin.type;
+  admin = this.userService.lastLogin.admin;
   alert = Swal.mixin({
     confirmButtonText: "Vale",
     allowOutsideClick: false,
@@ -37,14 +38,23 @@ export class HomeComponent implements OnInit {
         this.type = value;
         this.userService.fillFields(this.username, this.userService.token, {
           date: this.date.toString(),
-          type: value
+          type: value,
+          admin: this.admin
+        });
+        Swal.fire({
+          title: "Has fichado correctamente",
+          type: "success",
+          toast: true,
+          position: 'bottom',
+          showConfirmButton: false,
+          timer: 3000
         });
       },
       error => {
         console.log(error);
         switch (error.status) {
           case 400:
-            if (error.error.status === "Bad request: unpaired outdate") {
+            if (error.error.status.includes("Bad request: unpaired outdate")) {
               this.alert.fire({
                 title: "¿Abrir incidencia?",
                 text: "Estás intentando salir sin haber marcado antes una hora de entrada. Si no has podido o se te ha olvidado, ¿quieres abrir una incidencia?",
@@ -56,7 +66,7 @@ export class HomeComponent implements OnInit {
                   this.lastClock("out");
                 }
               });
-            } else if (error.error.status === "Bad request: unpaired indate") {
+            } else if (error.error.status.includes("Bad request: unpaired indate")) {
               this.alert.fire({
                 title: "¿Abrir incidencia?",
                 text: "Estás intentado entrar, pero la última vez no marcaste la hora de salida. Si no pudiste o se te olvidó, ¿quieres abrir una incidencia?",
@@ -80,7 +90,7 @@ export class HomeComponent implements OnInit {
             this.alert
               .fire({
                 title: "Error",
-                text: "Acceso denegado. Token no válido",
+                text: "Acceso denegado. La sesión ha expirado.",
                 type: "error"
               })
               .then(res => {
@@ -161,5 +171,9 @@ export class HomeComponent implements OnInit {
   issue() {
     //this.router.navigate(["/issue"]);
     this.router.navigate(["/issueForm"]);
+  }
+
+  adminHome() {
+    this.router.navigate(["/adminHome"]);
   }
 }

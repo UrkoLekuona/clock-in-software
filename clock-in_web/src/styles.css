@@ -14,7 +14,8 @@ app-issue {
   height: 100% !important;
 }
 
-html, body {
+html,
+body {
   min-height: 100vh;
   height: auto;
   margin: 0;
@@ -33,6 +34,7 @@ body {
   -webkit-box-shadow: 2px 4px 58px -20px rgba(0, 0, 0, 1);
   -moz-box-shadow: 2px 4px 58px -20px rgba(0, 0, 0, 1);
   box-shadow: 2px 4px 58px -20px rgba(0, 0, 0, 1);
+  overflow: auto;
 }
 
 .login-container {
@@ -103,4 +105,48 @@ body {
   padding: 1.5% !important;
   background-color: #e66e65;
   font-size: 1.5em;
+}
+
+.centered-layout {
+  display: block !important;
+  margin: 0 auto;
+  width: 80%;
+  text-align: center;
+}
+
+.centered-spinner {
+  display: block;
+  margin: 0 auto;
+}
+
+.mat-progress-spinner circle,
+.mat-spinner circle {
+  stroke: #0099e0;
+}
+
+.table-container {
+  max-height: 300px;
+  overflow: auto;
+}
+
+table.clockTable {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: scroll;
+  max-height: 100px;
+}
+
+mat-table {
+  text-align: center !important;
+  width: 100%;
+}
+
+.mat-header-cell {
+  text-align: center;
+  justify-content: center;
+}
+
+.mat-cell {
+  text-align: center;
+  justify-content: center;
 }

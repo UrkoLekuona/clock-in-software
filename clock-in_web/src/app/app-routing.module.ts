@@ -6,6 +6,8 @@ import { LoginComponent } from './login/login.component';
 import { IssueComponent } from './issue/issue.component';
 import { IssueFormComponent } from './issue-form/issue-form.component';
 import { AuthGuard } from './auth-guard.guard';
+import { AdminHomeComponent } from './admin-home/admin-home.component';
+import { AdminGuard } from "./admin-guard.guard";
 
 const routes: Routes = [
   {
@@ -31,6 +33,11 @@ const routes: Routes = [
     path: "issueForm",
     canActivate: [AuthGuard],
     component: IssueFormComponent
+  },
+  {
+    path: "adminHome",
+    canActivate: [AuthGuard, AdminGuard],
+    component: AdminHomeComponent
   },
   { path: "**", redirectTo: "login", pathMatch: "full" }
 ];

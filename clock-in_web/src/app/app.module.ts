@@ -14,10 +14,15 @@ import {
   MatCardModule,
   MatDatepickerModule,
   MatNativeDateModule,
+  MatSelectModule,
   MatFormFieldModule,
+  MatTableModule,
+  MatProgressSpinnerModule,
   MAT_DATE_LOCALE,
   MatDividerModule
 } from "@angular/material";
+
+import { MatTableExporterModule } from "mat-table-exporter";
 
 import { NgxMaterialTimepickerModule } from 'ngx-material-timepicker';
 
@@ -28,9 +33,10 @@ import { RequestInterceptor } from "./request.interceptor";
 import { HomeComponent } from "./home/home.component";
 import { IssueComponent } from "./issue/issue.component";
 import { IssueFormComponent } from './issue-form/issue-form.component';
+import { AdminHomeComponent } from './admin-home/admin-home.component';
 
 @NgModule({
-  declarations: [AppComponent, LoginComponent, HomeComponent, IssueComponent, IssueFormComponent],
+  declarations: [AppComponent, LoginComponent, HomeComponent, IssueComponent, IssueFormComponent, AdminHomeComponent],
   imports: [
     BrowserModule,
     MatButtonModule,
@@ -43,7 +49,11 @@ import { IssueFormComponent } from './issue-form/issue-form.component';
     MatDatepickerModule,
     MatNativeDateModule,
     MatFormFieldModule,
+    MatTableModule,
+    MatSelectModule,
     MatDividerModule,
+    MatProgressSpinnerModule,
+    MatTableExporterModule,
     AppRoutingModule,
     BrowserAnimationsModule,
     ReactiveFormsModule,
