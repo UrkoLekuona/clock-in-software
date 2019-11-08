@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from "@angular/core";
+import { Component, OnInit, ViewChild, ElementRef } from "@angular/core";
 import {
   FormControl,
   FormGroup,
@@ -6,6 +6,7 @@ import {
   FormBuilder
 } from "@angular/forms";
 import Swal from "sweetalert2";
+import * as XLSX from "xlsx";
 
 import { NetworkService } from "../network.service";
 import { DateHourValidator } from "../dateHourValidator";
@@ -21,9 +22,22 @@ export interface Clock {
   outIp: string;
 }
 
+export interface Issue {
+  id: number;
+  date: string;
+  text: string;
+  rInDate: string;
+  nInDate: string;
+  diffInDate: number;
+  rOutDate: string;
+  nOutDate: string;
+  diffOutDate: number;
+}
+
 export interface User {
   username: string;
   clocks?: Clock[];
+  issues?: Issue[];
 }
 
 @Component({
@@ -41,10 +55,24 @@ export class AdminHomeComponent implements OnInit {
     allowOutsideClick: false,
     allowEscapeKey: false
   });
-  @ViewChild('exporter', {static: false}) exporter: any;
+  @ViewChild("exporter", { static: false }) exporter: any;
+  @ViewChild("clockTable", { static: false }) clockTable: ElementRef;
+  @ViewChild("issueTable", { static: false }) issueTable: ElementRef;
 
-  public displayedColumns = ["id", "inDate", "inIp", "outDate", "outIp"];
-  public dataSource: MatTableDataSource<Clock>;
+  public displayedColumnsClock = ["id", "inDate", "inIp", "outDate", "outIp"];
+  public dataSourceClock: MatTableDataSource<Clock>;
+  public displayedColumnsIssue = [
+    "id",
+    "date",
+    "text",
+    "rInDate",
+    "nInDate",
+    "diffInDate",
+    "rOutDate",
+    "nOutDate",
+    "diffOutDate"
+  ];
+  public dataSourceIssue: MatTableDataSource<Issue>;
 
   constructor(
     private network: NetworkService,
@@ -134,10 +162,16 @@ export class AdminHomeComponent implements OnInit {
           const aux: any = data;
           this.selectedUser = {
             username: this.selectedUser.username,
-            clocks: aux.body.clocks
+            clocks: aux.body.clocks,
+            issues: aux.body.issues
           };
-          this.dataSource = new MatTableDataSource<Clock>(this.selectedUser.clocks);
-          console.log(aux.body.clocks);
+          this.dataSourceClock = new MatTableDataSource<Clock>(
+            this.selectedUser.clocks
+          );
+          this.dataSourceIssue = new MatTableDataSource<Issue>(
+            this.selectedUser.issues
+          );
+          console.log(aux.body);
         },
         err => {
           console.log(err);
@@ -184,4 +218,22 @@ export class AdminHomeComponent implements OnInit {
     }
   }
 
+  saveAsExcel() {
+    if (this.clockTable) {
+      const ws: XLSX.WorkSheet = XLSX.utils.table_to_sheet(
+        this.clockTable.nativeElement
+      );
+      const ws2: XLSX.WorkSheet = XLSX.utils.table_to_sheet(
+        this.issueTable.nativeElement
+      );
+      const wb: XLSX.WorkBook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Fichajes");
+      XLSX.utils.book_append_sheet(wb, ws2, "Incidencias");
+
+      /* save to file */
+      XLSX.writeFile(wb, "SheetJS.xlsx");
+    } else {
+      console.log("no");
+    }
+  }
 }

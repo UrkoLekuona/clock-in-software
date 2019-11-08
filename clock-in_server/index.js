@@ -3,7 +3,7 @@ var express      = require('express'),
     passport     = require('passport'),
     bodyParser   = require('body-parser'),
     cookieParser = require('cookie-parser'),
-    jwt 	     = require('jsonwebtoken'),
+    jwt 	 = require('jsonwebtoken'),
     fs           = require('file-system'),
     mariadb      = require('mariadb'),
     pass_file    = require('./password.key.json'),
@@ -92,8 +92,8 @@ app.use(function(err, req, res, next) {
 
 function isAdmin(req, res, next) {
   if (req.user.admin) {
-    error(req.user.user + ' is trying to access ' + req.path + ' without being admin.', 'Not admin', 401, req.ip, res);
-    //next();
+    //error(req.user.user + ' is trying to access ' + req.path + ' without being admin.', 'Not admin', 401, req.ip, res);
+    next();
   } else {
     error(req.user.user + ' is trying to access ' + req.path + ' without being admin.', 'Not admin', 401, req.ip, res);
   }
@@ -341,14 +341,30 @@ app.post('/clocksBetweenDates', isAdmin, function(req, res, next) {
   let maxDate = moment(req.body.maxDate, 'DD/MM/YYYY', true);
   if (req.body.user && minDate.isValid() && maxDate.isValid() && minDate.isSameOrBefore(maxDate)) {
     mariadb.createConnection(db_opts).then(conn => {
-      conn.query("SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND outDate<=?", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((dbres) => {
-        if (dbres != undefined) {
-          dbres.forEach(row => {
+      conn.query("SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND outDate<=?", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((clockres) => {
+        if (clockres != undefined) {
+          clockres.forEach(row => {
             row['inDate'] = moment(row.inDate).format('DD/MM/YYYY HH:mm:ss A');
             row['outDate'] = moment(row.outDate).format('DD/MM/YYYY HH:mm:ss A');
 	  });
-          res.send({ status: 'ok', clocks: dbres});
-          conn.end();
+          conn.query("SELECT id, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate FROM issue WHERE user=? AND rInDate>=? AND rOutDate<=?", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((issueres) => {
+            if (issueres != undefined) {
+              issueres.forEach(row => {
+                row['date'] = moment(row.date).format('DD/MM/YYYY');
+                row['rInDate'] = moment(row.rInDate).format('DD/MM/YYYY HH:mm:ss A');
+                row['nInDate'] = moment(row.nInDate).format('DD/MM/YYYY HH:mm:ss A');
+                row['rOutDate'] = moment(row.rOutDate).format('DD/MM/YYYY HH:mm:ss A');
+                row['nOutDate'] = moment(row.nOutDate).format('DD/MM/YYYY HH:mm:ss A');
+              });
+              res.send({ status: 'ok', clocks: clockres, issues: issueres });
+              conn.end();
+            } else {
+              error('Error getting all issues', 'ClocksBetweenDates', 500, req.ip, res);
+            }
+          })
+          .catch(err2 => {
+            error(err2, 'DB connection error', 500, req.ip, res);
+          });
         } else {
           error('Error getting all clocks', 'ClocksBetweenDates', 500, req.ip, res);
         }
