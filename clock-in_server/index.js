@@ -161,6 +161,9 @@ app.post('/clock', function(req, res, next) {
             error('Bad request: unknown error', 'Clock in', 400, ip, res);
           }
         })
+	.catch(err => {
+	  error(err, 'DB connection error', 500, ip, res);
+        });
       })
       .catch(err => {
         error(err, 'DB connection error', 500, ip, res);  
@@ -182,6 +185,9 @@ app.post('/clock', function(req, res, next) {
             error('Bad request: unknown error', 'Clock out', 400, ip, res);
           } 
         })
+	.catch(err => {
+	  error(err, 'DB connection error', 500, ip, res);
+        });
       })
       .catch(err => {
         error(err, 'DB connection error', 500, ip, res);
@@ -341,20 +347,20 @@ app.post('/clocksBetweenDates', isAdmin, function(req, res, next) {
   let maxDate = moment(req.body.maxDate, 'DD/MM/YYYY', true);
   if (req.body.user && minDate.isValid() && maxDate.isValid() && minDate.isSameOrBefore(maxDate)) {
     mariadb.createConnection(db_opts).then(conn => {
-      conn.query("SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND outDate<=?", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((clockres) => {
+      conn.query("SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND (outDate<=? OR outDate IS NULL)", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((clockres) => {
         if (clockres != undefined) {
           clockres.forEach(row => {
-            row['inDate'] = moment(row.inDate).format('DD/MM/YYYY HH:mm:ss A');
-            row['outDate'] = moment(row.outDate).format('DD/MM/YYYY HH:mm:ss A');
+            row['inDate'] = moment(row.inDate).format('DD/MM/YYYY HH:mm:ss');
+            row['outDate'] = moment(row.outDate).format('DD/MM/YYYY HH:mm:ss');
 	  });
-          conn.query("SELECT id, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate FROM issue WHERE user=? AND rInDate>=? AND rOutDate<=?", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((issueres) => {
+          conn.query("SELECT id, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate FROM issue WHERE user=? AND rInDate>=? AND (rOutDate<=? OR rOutDate IS NULL)", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((issueres) => {
             if (issueres != undefined) {
               issueres.forEach(row => {
                 row['date'] = moment(row.date).format('DD/MM/YYYY');
-                row['rInDate'] = moment(row.rInDate).format('DD/MM/YYYY HH:mm:ss A');
-                row['nInDate'] = moment(row.nInDate).format('DD/MM/YYYY HH:mm:ss A');
-                row['rOutDate'] = moment(row.rOutDate).format('DD/MM/YYYY HH:mm:ss A');
-                row['nOutDate'] = moment(row.nOutDate).format('DD/MM/YYYY HH:mm:ss A');
+                row['rInDate'] = moment(row.rInDate).format('DD/MM/YYYY HH:mm:ss');
+                row['nInDate'] = moment(row.nInDate).format('DD/MM/YYYY HH:mm:ss');
+                row['rOutDate'] = moment(row.rOutDate).format('DD/MM/YYYY HH:mm:ss');
+                row['nOutDate'] = moment(row.nOutDate).format('DD/MM/YYYY HH:mm:ss');
               });
               res.send({ status: 'ok', clocks: clockres, issues: issueres });
               conn.end();

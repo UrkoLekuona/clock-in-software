@@ -143,12 +143,7 @@ table.mat-table {
   width: 100%;
 }
 
-.mat-header-cell {
-  text-align: center;
-  justify-content: center;
-}
-
-.mat-cell {
+.mat-header-cell, .mat-cell, .mat-footer-cell {
   text-align: center;
   justify-content: center;
 }
@@ -161,6 +156,6 @@ table.mat-table {
   background-color: #7fdb7f;
 }
 
-tr.mat-header-row, tr.mat-row {
+tr.mat-header-row, tr.mat-row, tr.mat-footer-row {
   display: flex;
 }

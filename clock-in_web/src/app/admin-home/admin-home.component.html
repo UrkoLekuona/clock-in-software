@@ -4,7 +4,7 @@
     <mat-form-field>
       <mat-label>Usuario</mat-label>
       <mat-select
-        [(value)]="selectedUser.username"
+        [(value)]="selectedUser && selectedUser.username"
         (selectionChange)="loadUser($event.value)"
       >
         <mat-option *ngFor="let user of users" [value]="user.username">
@@ -67,33 +67,77 @@
         >
           <h4>Este usuario no tiene fichajes entre estas fechas</h4>
         </div>
-        <div #clockTable *ngIf="selectedUser.clocks?.length > 0" class="table-container">
-          <table mat-table
-            
-            matTableExporter
-            class="clockTable"
-            [dataSource]="dataSourceClock"
-            #exporter="matTableExporter"
-          >
+        <div
+          *ngIf="selectedUser.clocks?.length > 0"
+          class="table-container"
+        >
+          <div #clockTable hidden>
+            <table mat-table class="clockTable" [dataSource]="dataSourceClock">
+              <ng-container matColumnDef="id">
+                <mat-header-cell *matHeaderCellDef
+                  >Identificador</mat-header-cell
+                >
+                <mat-cell *matCellDef="let clock">{{ clock.id }}</mat-cell>
+                <mat-footer-cell *matFooterCellDef></mat-footer-cell>
+              </ng-container>
+              <ng-container matColumnDef="inDate">
+                <mat-header-cell *matHeaderCellDef
+                  >Fecha entrada</mat-header-cell
+                >
+                <mat-cell *matCellDef="let clock">{{ clock.inDate.toString() }}</mat-cell>
+                <mat-footer-cell *matFooterCellDef></mat-footer-cell>
+              </ng-container>
+              <ng-container matColumnDef="inIp">
+                <mat-header-cell *matHeaderCellDef>IP entrada</mat-header-cell>
+                <mat-cell *matCellDef="let clock">{{ clock.inIp }}</mat-cell>
+                <mat-footer-cell *matFooterCellDef></mat-footer-cell>
+              </ng-container>
+              <ng-container matColumnDef="outDate">
+                <mat-header-cell *matHeaderCellDef
+                  >Fecha salida</mat-header-cell
+                >
+                <mat-cell *matCellDef="let clock">{{ clock.outDate }}</mat-cell>
+                <mat-footer-cell *matFooterCellDef><strong>Total horas:</strong></mat-footer-cell>
+              </ng-container>
+              <ng-container matColumnDef="outIp">
+                <mat-header-cell *matHeaderCellDef>IP salida</mat-header-cell>
+                <mat-cell *matCellDef="let clock">{{ clock.outIp }}</mat-cell>
+                <mat-footer-cell *matFooterCellDef><strong>{{ timeConvert(selectedUser.totalHour) }}</strong></mat-footer-cell>
+              </ng-container>
+              <tr mat-header-row
+                *matHeaderRowDef="displayedColumnsClock; sticky: true"
+              ></tr>
+              <tr mat-row
+                *matRowDef="let row; columns: displayedColumnsClock"
+              ></tr>
+              <tr mat-footer-row *matFooterRowDef="displayedColumnsClock; sticky: true"></tr>
+            </table>
+          </div>
+          <mat-table class="clockTable" [dataSource]="dataSourceClock">
             <ng-container matColumnDef="id">
               <mat-header-cell *matHeaderCellDef>Identificador</mat-header-cell>
               <mat-cell *matCellDef="let clock">{{ clock.id }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="inDate">
               <mat-header-cell *matHeaderCellDef>Fecha entrada</mat-header-cell>
               <mat-cell *matCellDef="let clock">{{ clock.inDate }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="inIp">
               <mat-header-cell *matHeaderCellDef>IP entrada</mat-header-cell>
               <mat-cell *matCellDef="let clock">{{ clock.inIp }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="outDate">
               <mat-header-cell *matHeaderCellDef>Fecha salida</mat-header-cell>
               <mat-cell *matCellDef="let clock">{{ clock.outDate }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef><strong>Total horas:</strong></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="outIp">
               <mat-header-cell *matHeaderCellDef>IP salida</mat-header-cell>
               <mat-cell *matCellDef="let clock">{{ clock.outIp }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef><strong>{{ timeConvert(selectedUser.totalHour) }}</strong></mat-footer-cell>
             </ng-container>
             <!--<ng-container matColumnDef="update">
               <mat-header-cell *matHeaderCellDef>Actualizar</mat-header-cell>
@@ -104,31 +148,16 @@
               </mat-cell>
             </ng-container>
           -->
-            <tr mat-header-row
+            <mat-header-row
               *matHeaderRowDef="displayedColumnsClock; sticky: true"
-            ></tr>
-            <tr mat-row
+            ></mat-header-row>
+            <mat-row
               *matRowDef="let row; columns: displayedColumnsClock"
-            ></tr>
-        </table>
+            ></mat-row>
+            <mat-footer-row *matFooterRowDef="displayedColumnsClock; sticky: true"></mat-footer-row>
+          </mat-table>
         </div>
       </mat-card-content>
-      <!--<mat-card-actions>
-        <button
-          mat-raised-button
-          (click)="
-            exporterClock &&
-              exporterClock.exportTable('xlsx', {
-                fileName: 'Fichajes ' + selectedUser.username,
-                sheet: 'Fichajes',
-                Props: { Author: '' }
-              })
-          "
-        >
-          <mat-icon class="mat-18">save</mat-icon> Exportar a Excel
-        </button>
-      </mat-card-actions>
-    -->
     </mat-card>
     <br />
     <mat-card
@@ -143,23 +172,114 @@
       >
         <h4>Este usuario no tiene incidencias entre estas fechas</h4>
       </div>
-      <div #issueTable *ngIf="selectedUser.issues?.length > 0" class="table-container">
-        <table mat-table
-          
-          matTableExporter
-          class="clockTable"
-          [dataSource]="dataSourceIssue"
-          #exporterIssue="matTableExporter"
-        >
+      <div *ngIf="selectedUser.issues?.length > 0" class="table-container">
+        <div #issueTable hidden>
+          <table mat-table class="clockTable" [dataSource]="dataSourceIssue">
+            <ng-container matColumnDef="id">
+              <mat-header-cell *matHeaderCellDef>Identificador</mat-header-cell>
+              <mat-cell *matCellDef="let issue">{{ issue.id }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="date">
+              <mat-header-cell *matHeaderCellDef
+                >Fecha incidencia</mat-header-cell
+              >
+              <mat-cell *matCellDef="let issue">{{ issue.date }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="text">
+              <mat-header-cell *matHeaderCellDef
+                >Texto incidencia</mat-header-cell
+              >
+              <mat-cell *matCellDef="let issue">
+                <div style="max-height: 100px; overflow: auto;">
+                  <p>{{ issue.text }}</p>
+                </div>
+              </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="rInDate">
+              <mat-header-cell *matHeaderCellDef
+                >Hora de entrada real</mat-header-cell
+              >
+              <mat-cell *matCellDef="let issue">{{ issue.rInDate }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="nInDate">
+              <mat-header-cell *matHeaderCellDef
+                >Hora de entrada actualizada</mat-header-cell
+              >
+              <mat-cell *matCellDef="let issue">{{
+                issue.nInDate === "Invalid date" ? issue.rInDate : issue.nInDate
+              }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="diffInDate">
+              <mat-header-cell *matHeaderCellDef
+                >Diferencia entrada</mat-header-cell
+              >
+              <mat-cell
+                *matCellDef="let issue"
+                [ngClass]="
+                  issue.diffInDate > 0
+                    ? 'green'
+                    : issue.diffInDate < 0
+                    ? 'red'
+                    : ''
+                "
+                >{{ issue.diffInDate }}</mat-cell
+              >
+            </ng-container>
+            <ng-container matColumnDef="rOutDate">
+              <mat-header-cell *matHeaderCellDef
+                >Hora de salida real</mat-header-cell
+              >
+              <mat-cell *matCellDef="let issue">{{ issue.rOutDate }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="nOutDate">
+              <mat-header-cell *matHeaderCellDef
+                >Hora de salida actualizada</mat-header-cell
+              >
+              <mat-cell *matCellDef="let issue">{{
+                issue.nOutDate === "Invalid date"
+                  ? issue.rOutDate
+                  : issue.nOutDate
+              }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="diffOutDate">
+              <mat-header-cell *matHeaderCellDef
+                >Diferencia salida</mat-header-cell
+              >
+              <mat-cell
+                *matCellDef="let issue"
+                [ngClass]="
+                  issue.diffOutDate > 0
+                    ? 'green'
+                    : issue.diffOutDate < 0
+                    ? 'red'
+                    : ''
+                "
+                >{{ issue.diffOutDate }}</mat-cell
+              >
+            </ng-container>
+
+            <tr
+              mat-header-row
+              *matHeaderRowDef="displayedColumnsIssue; sticky: true"
+            ></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: displayedColumnsIssue"
+            ></tr>
+          </table>
+        </div>
+        <mat-table class="clockTable" [dataSource]="dataSourceIssue">
           <ng-container matColumnDef="id">
             <mat-header-cell *matHeaderCellDef>Identificador</mat-header-cell>
             <mat-cell *matCellDef="let issue">{{ issue.id }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="date">
             <mat-header-cell *matHeaderCellDef
               >Fecha incidencia</mat-header-cell
             >
             <mat-cell *matCellDef="let issue">{{ issue.date }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef><strong>Total horas fichadas:</strong></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="text">
             <mat-header-cell *matHeaderCellDef
@@ -170,12 +290,14 @@
                 <p>{{ issue.text }}</p>
               </div>
             </mat-cell>
+            <mat-footer-cell *matFooterCellDef><strong>{{ timeConvert(selectedUser.totalHour) }}</strong></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="rInDate">
             <mat-header-cell *matHeaderCellDef
               >Hora de entrada real</mat-header-cell
             >
             <mat-cell *matCellDef="let issue">{{ issue.rInDate }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="nInDate">
             <mat-header-cell *matHeaderCellDef
@@ -184,6 +306,7 @@
             <mat-cell *matCellDef="let issue">{{
               issue.nInDate === "Invalid date" ? issue.rInDate : issue.nInDate
             }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef><strong>Diferencia incidencias:</strong></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="diffInDate">
             <mat-header-cell *matHeaderCellDef
@@ -200,12 +323,14 @@
               "
               >{{ issue.diffInDate }}</mat-cell
             >
+            <mat-footer-cell *matFooterCellDef><strong>{{ timeConvert(selectedUser.diffHour) }}</strong></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="rOutDate">
             <mat-header-cell *matHeaderCellDef
               >Hora de salida real</mat-header-cell
             >
             <mat-cell *matCellDef="let issue">{{ issue.rOutDate }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="nOutDate">
             <mat-header-cell *matHeaderCellDef
@@ -216,6 +341,7 @@
                 ? issue.rOutDate
                 : issue.nOutDate
             }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef><strong>Total final:</strong></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="diffOutDate">
             <mat-header-cell *matHeaderCellDef
@@ -231,27 +357,24 @@
                   : ''
               "
               >{{ issue.diffOutDate }}</mat-cell
-            >
+            ><mat-footer-cell *matFooterCellDef><strong>{{ timeConvert(selectedUser.totalHourAfterDiff) }}</strong></mat-footer-cell>
           </ng-container>
 
-          <tr mat-header-row
+          <mat-header-row
             *matHeaderRowDef="displayedColumnsIssue; sticky: true"
-          ></tr>
-          <tr mat-row
+          ></mat-header-row>
+          <mat-row
             *matRowDef="let row; columns: displayedColumnsIssue"
-          >
-        </tr>
-        </table>
+          ></mat-row>
+          <mat-footer-row *matFooterRowDef="displayedColumnsIssue; sticky: true"></mat-footer-row>
+        </mat-table>
       </div>
     </mat-card>
-    <button
-          mat-raised-button
-          (click)="saveAsExcel()"
-        >
-          <mat-icon class="mat-18">save</mat-icon> Exportar a Excel
-        </button>
     <br />
     <br />
+    <button mat-raised-button (click)="saveAsExcel()">
+      <mat-icon class="mat-18">save</mat-icon> Exportar a Excel
+    </button>
     <br />
     <br />
     <br />
