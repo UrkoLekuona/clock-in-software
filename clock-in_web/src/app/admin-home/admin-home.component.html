@@ -67,10 +67,7 @@
         >
           <h4>Este usuario no tiene fichajes entre estas fechas</h4>
         </div>
-        <div
-          *ngIf="selectedUser.clocks?.length > 0"
-          class="table-container"
-        >
+        <div *ngIf="selectedUser.clocks?.length > 0" class="table-container">
           <div #clockTable hidden>
             <table mat-table class="clockTable" [dataSource]="dataSourceClock">
               <ng-container matColumnDef="id">
@@ -84,7 +81,9 @@
                 <mat-header-cell *matHeaderCellDef
                   >Fecha entrada</mat-header-cell
                 >
-                <mat-cell *matCellDef="let clock">{{ clock.inDate.toString() }}</mat-cell>
+                <mat-cell *matCellDef="let clock">{{
+                  clock.inDate.toString()
+                }}</mat-cell>
                 <mat-footer-cell *matFooterCellDef></mat-footer-cell>
               </ng-container>
               <ng-container matColumnDef="inIp">
@@ -97,20 +96,31 @@
                   >Fecha salida</mat-header-cell
                 >
                 <mat-cell *matCellDef="let clock">{{ clock.outDate }}</mat-cell>
-                <mat-footer-cell *matFooterCellDef><strong>Total horas:</strong></mat-footer-cell>
+                <mat-footer-cell *matFooterCellDef
+                  ><strong>Total horas:</strong></mat-footer-cell
+                >
               </ng-container>
               <ng-container matColumnDef="outIp">
                 <mat-header-cell *matHeaderCellDef>IP salida</mat-header-cell>
                 <mat-cell *matCellDef="let clock">{{ clock.outIp }}</mat-cell>
-                <mat-footer-cell *matFooterCellDef><strong>{{ timeConvert(selectedUser.totalHour) }}</strong></mat-footer-cell>
+                <mat-footer-cell *matFooterCellDef
+                  ><strong>{{
+                    timeConvert(selectedUser.totalHour)
+                  }}</strong></mat-footer-cell
+                >
               </ng-container>
-              <tr mat-header-row
+              <tr
+                mat-header-row
                 *matHeaderRowDef="displayedColumnsClock; sticky: true"
               ></tr>
-              <tr mat-row
+              <tr
+                mat-row
                 *matRowDef="let row; columns: displayedColumnsClock"
               ></tr>
-              <tr mat-footer-row *matFooterRowDef="displayedColumnsClock; sticky: true"></tr>
+              <tr
+                mat-footer-row
+                *matFooterRowDef="displayedColumnsClock; sticky: true"
+              ></tr>
             </table>
           </div>
           <mat-table class="clockTable" [dataSource]="dataSourceClock">
@@ -126,18 +136,42 @@
             </ng-container>
             <ng-container matColumnDef="inIp">
               <mat-header-cell *matHeaderCellDef>IP entrada</mat-header-cell>
-              <mat-cell *matCellDef="let clock">{{ clock.inIp }}</mat-cell>
+              <mat-cell
+                *matCellDef="let clock"
+                [ngClass]="
+                  !clock.inIp.includes('158.227.172.') &&
+                  !clock.inIp.includes('158.227.173.')
+                    ? 'yellow'
+                    : ''
+                "
+                >{{ clock.inIp }}</mat-cell
+              >
               <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="outDate">
               <mat-header-cell *matHeaderCellDef>Fecha salida</mat-header-cell>
               <mat-cell *matCellDef="let clock">{{ clock.outDate }}</mat-cell>
-              <mat-footer-cell *matFooterCellDef><strong>Total horas:</strong></mat-footer-cell>
+              <mat-footer-cell *matFooterCellDef
+                ><strong>Total horas:</strong></mat-footer-cell
+              >
             </ng-container>
             <ng-container matColumnDef="outIp">
               <mat-header-cell *matHeaderCellDef>IP salida</mat-header-cell>
-              <mat-cell *matCellDef="let clock">{{ clock.outIp }}</mat-cell>
-              <mat-footer-cell *matFooterCellDef><strong>{{ timeConvert(selectedUser.totalHour) }}</strong></mat-footer-cell>
+              <mat-cell
+                *matCellDef="let clock"
+                [ngClass]="
+                  !clock.outIp.includes('158.227.172.') &&
+                  !clock.outIp.includes('158.227.173.')
+                    ? 'yellow'
+                    : ''
+                "
+                >{{ clock.outIp }}</mat-cell
+              >
+              <mat-footer-cell *matFooterCellDef
+                ><strong>{{
+                  timeConvert(selectedUser.totalHour)
+                }}</strong></mat-footer-cell
+              >
             </ng-container>
             <!--<ng-container matColumnDef="update">
               <mat-header-cell *matHeaderCellDef>Actualizar</mat-header-cell>
@@ -154,7 +188,9 @@
             <mat-row
               *matRowDef="let row; columns: displayedColumnsClock"
             ></mat-row>
-            <mat-footer-row *matFooterRowDef="displayedColumnsClock; sticky: true"></mat-footer-row>
+            <mat-footer-row
+              *matFooterRowDef="displayedColumnsClock; sticky: true"
+            ></mat-footer-row>
           </mat-table>
         </div>
       </mat-card-content>
@@ -178,12 +214,16 @@
             <ng-container matColumnDef="id">
               <mat-header-cell *matHeaderCellDef>Identificador</mat-header-cell>
               <mat-cell *matCellDef="let issue">{{ issue.id }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="date">
               <mat-header-cell *matHeaderCellDef
                 >Fecha incidencia</mat-header-cell
               >
               <mat-cell *matCellDef="let issue">{{ issue.date }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef
+                ><strong>Total horas fichadas:</strong></mat-footer-cell
+              >
             </ng-container>
             <ng-container matColumnDef="text">
               <mat-header-cell *matHeaderCellDef
@@ -194,12 +234,18 @@
                   <p>{{ issue.text }}</p>
                 </div>
               </mat-cell>
+              <mat-footer-cell *matFooterCellDef
+                ><strong>{{
+                  timeConvert(selectedUser.totalHour)
+                }}</strong></mat-footer-cell
+              >
             </ng-container>
             <ng-container matColumnDef="rInDate">
               <mat-header-cell *matHeaderCellDef
                 >Hora de entrada real</mat-header-cell
               >
               <mat-cell *matCellDef="let issue">{{ issue.rInDate }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="nInDate">
               <mat-header-cell *matHeaderCellDef
@@ -208,6 +254,9 @@
               <mat-cell *matCellDef="let issue">{{
                 issue.nInDate === "Invalid date" ? issue.rInDate : issue.nInDate
               }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef
+                ><strong>Diferencia incidencias:</strong></mat-footer-cell
+              >
             </ng-container>
             <ng-container matColumnDef="diffInDate">
               <mat-header-cell *matHeaderCellDef
@@ -224,12 +273,18 @@
                 "
                 >{{ issue.diffInDate }}</mat-cell
               >
+              <mat-footer-cell *matFooterCellDef
+                ><strong>{{
+                  timeConvert(selectedUser.diffHour)
+                }}</strong></mat-footer-cell
+              >
             </ng-container>
             <ng-container matColumnDef="rOutDate">
               <mat-header-cell *matHeaderCellDef
                 >Hora de salida real</mat-header-cell
               >
               <mat-cell *matCellDef="let issue">{{ issue.rOutDate }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="nOutDate">
               <mat-header-cell *matHeaderCellDef
@@ -240,6 +295,9 @@
                   ? issue.rOutDate
                   : issue.nOutDate
               }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef
+                ><strong>Total final:</strong></mat-footer-cell
+              >
             </ng-container>
             <ng-container matColumnDef="diffOutDate">
               <mat-header-cell *matHeaderCellDef
@@ -256,6 +314,11 @@
                 "
                 >{{ issue.diffOutDate }}</mat-cell
               >
+              <mat-footer-cell *matFooterCellDef
+                ><strong>{{
+                  timeConvert(selectedUser.totalHourAfterDiff)
+                }}</strong></mat-footer-cell
+              >
             </ng-container>
 
             <tr
@@ -265,6 +328,10 @@
             <tr
               mat-row
               *matRowDef="let row; columns: displayedColumnsIssue"
+            ></tr>
+            <tr
+              mat-footer-row
+              *matFooterRowDef="displayedColumnsIssue; sticky: true"
             ></tr>
           </table>
         </div>
@@ -279,7 +346,9 @@
               >Fecha incidencia</mat-header-cell
             >
             <mat-cell *matCellDef="let issue">{{ issue.date }}</mat-cell>
-            <mat-footer-cell *matFooterCellDef><strong>Total horas fichadas:</strong></mat-footer-cell>
+            <mat-footer-cell *matFooterCellDef
+              ><strong>Total horas fichadas:</strong></mat-footer-cell
+            >
           </ng-container>
           <ng-container matColumnDef="text">
             <mat-header-cell *matHeaderCellDef
@@ -290,7 +359,11 @@
                 <p>{{ issue.text }}</p>
               </div>
             </mat-cell>
-            <mat-footer-cell *matFooterCellDef><strong>{{ timeConvert(selectedUser.totalHour) }}</strong></mat-footer-cell>
+            <mat-footer-cell *matFooterCellDef
+              ><strong>{{
+                timeConvert(selectedUser.totalHour)
+              }}</strong></mat-footer-cell
+            >
           </ng-container>
           <ng-container matColumnDef="rInDate">
             <mat-header-cell *matHeaderCellDef
@@ -306,7 +379,9 @@
             <mat-cell *matCellDef="let issue">{{
               issue.nInDate === "Invalid date" ? issue.rInDate : issue.nInDate
             }}</mat-cell>
-            <mat-footer-cell *matFooterCellDef><strong>Diferencia incidencias:</strong></mat-footer-cell>
+            <mat-footer-cell *matFooterCellDef
+              ><strong>Diferencia incidencias:</strong></mat-footer-cell
+            >
           </ng-container>
           <ng-container matColumnDef="diffInDate">
             <mat-header-cell *matHeaderCellDef
@@ -323,7 +398,11 @@
               "
               >{{ issue.diffInDate }}</mat-cell
             >
-            <mat-footer-cell *matFooterCellDef><strong>{{ timeConvert(selectedUser.diffHour) }}</strong></mat-footer-cell>
+            <mat-footer-cell *matFooterCellDef
+              ><strong>{{
+                timeConvert(selectedUser.diffHour)
+              }}</strong></mat-footer-cell
+            >
           </ng-container>
           <ng-container matColumnDef="rOutDate">
             <mat-header-cell *matHeaderCellDef
@@ -341,7 +420,9 @@
                 ? issue.rOutDate
                 : issue.nOutDate
             }}</mat-cell>
-            <mat-footer-cell *matFooterCellDef><strong>Total final:</strong></mat-footer-cell>
+            <mat-footer-cell *matFooterCellDef
+              ><strong>Total final:</strong></mat-footer-cell
+            >
           </ng-container>
           <ng-container matColumnDef="diffOutDate">
             <mat-header-cell *matHeaderCellDef
@@ -357,7 +438,11 @@
                   : ''
               "
               >{{ issue.diffOutDate }}</mat-cell
-            ><mat-footer-cell *matFooterCellDef><strong>{{ timeConvert(selectedUser.totalHourAfterDiff) }}</strong></mat-footer-cell>
+            ><mat-footer-cell *matFooterCellDef
+              ><strong>{{
+                timeConvert(selectedUser.totalHourAfterDiff)
+              }}</strong></mat-footer-cell
+            >
           </ng-container>
 
           <mat-header-row
@@ -366,7 +451,9 @@
           <mat-row
             *matRowDef="let row; columns: displayedColumnsIssue"
           ></mat-row>
-          <mat-footer-row *matFooterRowDef="displayedColumnsIssue; sticky: true"></mat-footer-row>
+          <mat-footer-row
+            *matFooterRowDef="displayedColumnsIssue; sticky: true"
+          ></mat-footer-row>
         </mat-table>
       </div>
     </mat-card>

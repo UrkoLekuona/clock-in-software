@@ -105,13 +105,6 @@ app.post('/login', passport.authenticate('ldapauth', {session: false}), (req, re
   var privateKey = fs.readFileSync('jwtRS256.key', 'utf8');
   mariadb.createConnection(db_opts).then(conn => {
     conn.query("INSERT IGNORE INTO users VALUES(?)", req.body.username).then((dbres) => {
-      /*conn.query("SELECT CASE WHEN MAX(outDate) IS NULL THEN MAX(inDate) WHEN MAX(inDate) > MAX(outDate) THEN MAX(inDate) ELSE MAX(outDate) END AS date FROM clock WHERE user=?;", [req.body.username]).then((rows) => {
-	if (rows[0] === undefined || rows[0].date == null) { 
-          date = 'none';
-        } else {
-          date = new Date(rows[0].date);
-        }
-      */
       conn.query("SELECT inDate, outDate FROM clock WHERE user=? and inDate=(SELECT MAX(inDate) FROM clock WHERE user=?)", [req.body.username, req.body.username]).then(rows => {
         if (rows[0] === undefined || rows[0].inDate == null) {
 	  date = 'none';
@@ -347,7 +340,7 @@ app.post('/clocksBetweenDates', isAdmin, function(req, res, next) {
   let maxDate = moment(req.body.maxDate, 'DD/MM/YYYY', true);
   if (req.body.user && minDate.isValid() && maxDate.isValid() && minDate.isSameOrBefore(maxDate)) {
     mariadb.createConnection(db_opts).then(conn => {
-      conn.query("SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND (outDate<=? OR outDate IS NULL)", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((clockres) => {
+      conn.query("SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND (outDate<=? OR (outDate IS NULL && TIMESTAMPDIFF(HOUR, inDate, NOW())>24))", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((clockres) => {
         if (clockres != undefined) {
           clockres.forEach(row => {
             row['inDate'] = moment(row.inDate).format('DD/MM/YYYY HH:mm:ss');

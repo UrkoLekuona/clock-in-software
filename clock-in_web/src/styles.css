@@ -109,6 +109,14 @@ body {
   font-size: 1.5em;
 }
 
+.in-button[disabled], .out-button[disabled] {
+  width: 50%;
+  padding: 1.5% !important;
+  background-color: #afb1b3ce;
+  font-size: 1.5em;
+  color: #fff !important;
+}
+
 .centered-layout {
   display: block !important;
   margin: 0 auto;
@@ -154,6 +162,10 @@ table.mat-table {
 
 .mat-cell.green {
   background-color: #7fdb7f;
+}
+
+.mat-cell.yellow {
+  background-color: #e4e26c;
 }
 
 tr.mat-header-row, tr.mat-row, tr.mat-footer-row {

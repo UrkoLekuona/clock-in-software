@@ -269,7 +269,7 @@ export class AdminHomeComponent implements OnInit {
     let num = value;
     let hours = num / 60;
     let rhours = (hours >= 0) ? Math.floor(hours) : Math.ceil(hours);
-    let minutes = (hours - rhours) * 60;
+    let minutes = num % 60;
     let rminutes = Math.round(minutes);
     return (
       rhours + " horas y " + rminutes + " minutos"
