@@ -4,6 +4,7 @@
 
 @import "../node_modules/@angular/material/prebuilt-themes/indigo-pink.css";
 
+/*
 app-root {
   display: block !important;
   height: 100vh !important;
@@ -20,6 +21,7 @@ body {
   height: auto;
   margin: 0;
 }
+*/
 
 body {
   font-family: "Roboto", sans-serif;
@@ -107,6 +109,14 @@ body {
   font-size: 1.5em;
 }
 
+.in-button[disabled], .out-button[disabled] {
+  width: 50%;
+  padding: 1.5% !important;
+  background-color: #afb1b3ce;
+  font-size: 1.5em;
+  color: #fff !important;
+}
+
 .centered-layout {
   display: block !important;
   margin: 0 auto;
@@ -136,17 +146,28 @@ table.clockTable {
   max-height: 100px;
 }
 
-mat-table {
+table.mat-table {
   text-align: center !important;
   width: 100%;
 }
 
-.mat-header-cell {
+.mat-header-cell, .mat-cell, .mat-footer-cell {
   text-align: center;
   justify-content: center;
 }
 
-.mat-cell {
-  text-align: center;
-  justify-content: center;
+.mat-cell.red {
+  background-color: #e66e65;
+}
+
+.mat-cell.green {
+  background-color: #7fdb7f;
+}
+
+.mat-cell.yellow {
+  background-color: #e4e26c;
+}
+
+tr.mat-header-row, tr.mat-row, tr.mat-footer-row {
+  display: flex;
 }

@@ -11,10 +11,10 @@
             <p>{{ type === "in" ? "Entraste" : "Saliste" }} por última vez:</p>
             <p>{{ date | date: "medium" }}</p>
           </div>
-          <button mat-raised-button class="in-button" (click)="clock('in')">
+          <button mat-raised-button [disabled]="disableButtons" class="in-button" (click)="clock('in')">
             Fichar
           </button>
-          <button mat-raised-button class="out-button" (click)="clock('out')">
+          <button mat-raised-button [disabled]="disableButtons" class="out-button" (click)="clock('out')">
             Desfichar
           </button>
           <br />
@@ -23,7 +23,7 @@
             Incidencia
           </button>
           <br/>
-          <div *ngIf="false && admin">
+          <div *ngIf="admin">
             <br />
             <button mat-raised-button class="login-button" (click)="adminHome()">
               Panel de administración

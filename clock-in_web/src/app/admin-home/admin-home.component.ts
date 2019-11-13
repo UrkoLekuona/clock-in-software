@@ -6,12 +6,14 @@ import {
   FormBuilder
 } from "@angular/forms";
 import Swal from "sweetalert2";
+import * as XLSX from "xlsx";
+import * as moment from "moment";
 
 import { NetworkService } from "../network.service";
 import { DateHourValidator } from "../dateHourValidator";
 import { UserService } from "../user.service";
 import { Router } from "@angular/router";
-import { MatTableDataSource } from "@angular/material";
+import { MatTableDataSource, MatTable } from "@angular/material";
 
 export interface Clock {
   id: number;
@@ -21,9 +23,25 @@ export interface Clock {
   outIp: string;
 }
 
+export interface Issue {
+  id: number;
+  date: string;
+  text: string;
+  rInDate: string;
+  nInDate: string;
+  diffInDate: number;
+  rOutDate: string;
+  nOutDate: string;
+  diffOutDate: number;
+}
+
 export interface User {
   username: string;
   clocks?: Clock[];
+  totalHour?: number;
+  issues?: Issue[];
+  diffHour?: number;
+  totalHourAfterDiff?: number;
 }
 
 @Component({
@@ -41,10 +59,24 @@ export class AdminHomeComponent implements OnInit {
     allowOutsideClick: false,
     allowEscapeKey: false
   });
-  @ViewChild('exporter', {static: false}) exporter: ElementRef;
+  @ViewChild("exporter", { static: false }) exporter: any;
+  @ViewChild("clockTable", { static: false }) clockTable: ElementRef;
+  @ViewChild("issueTable", { static: false }) issueTable: ElementRef;
 
-  public displayedColumns = ["id", "inDate", "inIp", "outDate", "outIp"];
-  public dataSource: MatTableDataSource<Clock>;
+  public displayedColumnsClock = ["id", "inDate", "inIp", "outDate", "outIp"];
+  public dataSourceClock: MatTableDataSource<Clock>;
+  public displayedColumnsIssue = [
+    "id",
+    "date",
+    "text",
+    "rInDate",
+    "nInDate",
+    "diffInDate",
+    "rOutDate",
+    "nOutDate",
+    "diffOutDate"
+  ];
+  public dataSourceIssue: MatTableDataSource<Issue>;
 
   constructor(
     private network: NetworkService,
@@ -76,7 +108,6 @@ export class AdminHomeComponent implements OnInit {
         let aux: any = data;
         const users: User[] = aux.body.users;
         this.users = users;
-        this.selectedUser = this.users[0];
       },
       err => {
         console.log(err);
@@ -134,10 +165,35 @@ export class AdminHomeComponent implements OnInit {
           const aux: any = data;
           this.selectedUser = {
             username: this.selectedUser.username,
-            clocks: aux.body.clocks
+            clocks: aux.body.clocks,
+            issues: aux.body.issues
           };
-          this.dataSource = new MatTableDataSource<Clock>(this.selectedUser.clocks);
-          console.log(aux.body.clocks);
+          this.dataSourceClock = new MatTableDataSource<Clock>(
+            this.selectedUser.clocks
+          );
+          this.dataSourceIssue = new MatTableDataSource<Issue>(
+            this.selectedUser.issues
+          );
+          let totalHour = 0;
+          this.selectedUser.clocks.forEach(clock => {
+            if (
+              !clock.inDate.includes("Invalid") &&
+              !clock.outDate.includes("Invalid")
+            ) {
+              let d1 = moment(clock.inDate, "DD/MM/YYYY HH:mm:ss", true);
+              let d2 = moment(clock.outDate, "DD/MM/YYYY HH:mm:ss", true);
+              totalHour += d2.diff(d1, "minutes");
+            }
+          });
+          let diffHour = 0;
+          this.selectedUser.issues.forEach(issue => {
+            diffHour += issue.diffInDate + issue.diffOutDate;
+          }); 
+          this.selectedUser.totalHour = totalHour;
+          this.selectedUser.diffHour = diffHour;
+          this.selectedUser.totalHourAfterDiff = totalHour + diffHour;
+          console.log(aux.body);
+          console.log(this.selectedUser.totalHour);
         },
         err => {
           console.log(err);
@@ -184,4 +240,39 @@ export class AdminHomeComponent implements OnInit {
     }
   }
 
+  saveAsExcel() {
+    if (this.clockTable) {
+      const ws: XLSX.WorkSheet = XLSX.utils.table_to_sheet(
+        this.clockTable.nativeElement,
+        { raw: true }
+      );
+      const wb: XLSX.WorkBook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Fichajes");
+      if (this.issueTable) {
+        const ws2: XLSX.WorkSheet = XLSX.utils.table_to_sheet(
+          this.issueTable.nativeElement,
+          { raw: true }
+        );
+        XLSX.utils.book_append_sheet(wb, ws2, "Incidencias");
+      }
+      XLSX.writeFile(wb, "Fichajes_" + this.selectedUser.username + ".xlsx");
+    } else {
+      this.alert.fire({
+        title: "Error",
+        text: "La tabla está vacía",
+        type: "error"
+      });
+    }
+  }
+
+  timeConvert(value) {
+    let num = value;
+    let hours = num / 60;
+    let rhours = (hours >= 0) ? Math.floor(hours) : Math.ceil(hours);
+    let minutes = num % 60;
+    let rminutes = Math.round(minutes);
+    return (
+      rhours + " horas y " + rminutes + " minutos"
+    );
+  }
 }

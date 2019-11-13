@@ -92,8 +92,8 @@ app.use(function(err, req, res, next) {
 
 function isAdmin(req, res, next) {
   if (req.user.admin) {
-    error(req.user.user + ' is trying to access ' + req.path + ' without being admin.', 'Not admin', 401, req.ip, res);
-    //next();
+    //error(req.user.user + ' is trying to access ' + req.path + ' without being admin.', 'Not admin', 401, req.ip, res);
+    next();
   } else {
     error(req.user.user + ' is trying to access ' + req.path + ' without being admin.', 'Not admin', 401, req.ip, res);
   }
@@ -105,13 +105,6 @@ app.post('/login', passport.authenticate('ldapauth', {session: false}), (req, re
   var privateKey = fs.readFileSync('jwtRS256.key', 'utf8');
   mariadb.createConnection(db_opts).then(conn => {
     conn.query("INSERT IGNORE INTO users VALUES(?)", req.body.username).then((dbres) => {
-      /*conn.query("SELECT CASE WHEN MAX(outDate) IS NULL THEN MAX(inDate) WHEN MAX(inDate) > MAX(outDate) THEN MAX(inDate) ELSE MAX(outDate) END AS date FROM clock WHERE user=?;", [req.body.username]).then((rows) => {
-	if (rows[0] === undefined || rows[0].date == null) { 
-          date = 'none';
-        } else {
-          date = new Date(rows[0].date);
-        }
-      */
       conn.query("SELECT inDate, outDate FROM clock WHERE user=? and inDate=(SELECT MAX(inDate) FROM clock WHERE user=?)", [req.body.username, req.body.username]).then(rows => {
         if (rows[0] === undefined || rows[0].inDate == null) {
 	  date = 'none';
@@ -161,6 +154,9 @@ app.post('/clock', function(req, res, next) {
             error('Bad request: unknown error', 'Clock in', 400, ip, res);
           }
         })
+	.catch(err => {
+	  error(err, 'DB connection error', 500, ip, res);
+        });
       })
       .catch(err => {
         error(err, 'DB connection error', 500, ip, res);  
@@ -182,6 +178,9 @@ app.post('/clock', function(req, res, next) {
             error('Bad request: unknown error', 'Clock out', 400, ip, res);
           } 
         })
+	.catch(err => {
+	  error(err, 'DB connection error', 500, ip, res);
+        });
       })
       .catch(err => {
         error(err, 'DB connection error', 500, ip, res);
@@ -341,14 +340,30 @@ app.post('/clocksBetweenDates', isAdmin, function(req, res, next) {
   let maxDate = moment(req.body.maxDate, 'DD/MM/YYYY', true);
   if (req.body.user && minDate.isValid() && maxDate.isValid() && minDate.isSameOrBefore(maxDate)) {
     mariadb.createConnection(db_opts).then(conn => {
-      conn.query("SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND outDate<=?", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((dbres) => {
-        if (dbres != undefined) {
-          dbres.forEach(row => {
-            row['inDate'] = moment(row.inDate).format('DD/MM/YYYY HH:mm:ss A');
-            row['outDate'] = moment(row.outDate).format('DD/MM/YYYY HH:mm:ss A');
+      conn.query("SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND (outDate<=? OR (outDate IS NULL && TIMESTAMPDIFF(HOUR, inDate, NOW())>24))", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((clockres) => {
+        if (clockres != undefined) {
+          clockres.forEach(row => {
+            row['inDate'] = moment(row.inDate).format('DD/MM/YYYY HH:mm:ss');
+            row['outDate'] = moment(row.outDate).format('DD/MM/YYYY HH:mm:ss');
 	  });
-          res.send({ status: 'ok', clocks: dbres});
-          conn.end();
+          conn.query("SELECT id, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate FROM issue WHERE user=? AND rInDate>=? AND (rOutDate<=? OR rOutDate IS NULL)", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((issueres) => {
+            if (issueres != undefined) {
+              issueres.forEach(row => {
+                row['date'] = moment(row.date).format('DD/MM/YYYY');
+                row['rInDate'] = moment(row.rInDate).format('DD/MM/YYYY HH:mm:ss');
+                row['nInDate'] = moment(row.nInDate).format('DD/MM/YYYY HH:mm:ss');
+                row['rOutDate'] = moment(row.rOutDate).format('DD/MM/YYYY HH:mm:ss');
+                row['nOutDate'] = moment(row.nOutDate).format('DD/MM/YYYY HH:mm:ss');
+              });
+              res.send({ status: 'ok', clocks: clockres, issues: issueres });
+              conn.end();
+            } else {
+              error('Error getting all issues', 'ClocksBetweenDates', 500, req.ip, res);
+            }
+          })
+          .catch(err2 => {
+            error(err2, 'DB connection error', 500, req.ip, res);
+          });
         } else {
           error('Error getting all clocks', 'ClocksBetweenDates', 500, req.ip, res);
         }

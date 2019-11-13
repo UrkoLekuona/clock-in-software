@@ -15,6 +15,7 @@ export class HomeComponent implements OnInit {
   date = new Date(this.userService.lastLogin.date);
   type = this.userService.lastLogin.type;
   admin = this.userService.lastLogin.admin;
+  disableButtons = false;
   alert = Swal.mixin({
     confirmButtonText: "Vale",
     allowOutsideClick: false,
@@ -31,9 +32,11 @@ export class HomeComponent implements OnInit {
 
   clock(value) {
     console.log(value);
+    this.disableButtons = true;
     this.network.clock(value).subscribe(
       data => {
         console.log(data);
+        setTimeout( () => { this.disableButtons = false }, 1000);
         this.date = new Date();
         this.type = value;
         this.userService.fillFields(this.username, this.userService.token, {
@@ -52,6 +55,7 @@ export class HomeComponent implements OnInit {
       },
       error => {
         console.log(error);
+        setTimeout( () => { this.disableButtons = false }, 1000);
         switch (error.status) {
           case 400:
             if (error.error.status.includes("Bad request: unpaired outdate")) {
