@@ -8,7 +8,7 @@
         (selectionChange)="loadUser($event.value)"
       >
         <mat-option *ngFor="let user of users" [value]="user.username">
-          {{ user.username }}
+          {{ user.displayName }}
         </mat-option>
       </mat-select>
     </mat-form-field>
@@ -437,7 +437,7 @@
                   ? 'red'
                   : ''
               "
-              >{{ issue.diffOutDate }}</mat-cell
+              >{{ (issue.diffOutDate) ? issue.diffOutDate : 0 }}</mat-cell
             ><mat-footer-cell *matFooterCellDef
               ><strong>{{
                 timeConvert(selectedUser.totalHourAfterDiff)

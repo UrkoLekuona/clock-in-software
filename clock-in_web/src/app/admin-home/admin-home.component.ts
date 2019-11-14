@@ -37,6 +37,7 @@ export interface Issue {
 
 export interface User {
   username: string;
+  displayName?: string;
   clocks?: Clock[];
   totalHour?: number;
   issues?: Issue[];
@@ -108,6 +109,7 @@ export class AdminHomeComponent implements OnInit {
         let aux: any = data;
         const users: User[] = aux.body.users;
         this.users = users;
+        console.log(this.users);
       },
       err => {
         console.log(err);
@@ -147,7 +149,7 @@ export class AdminHomeComponent implements OnInit {
   }
 
   loadUser(user) {
-    this.selectedUser = { username: user };
+    this.selectedUser = this.users.find(x => { return x.username === user; });
     this.clockDatesForm.get("clock_since").setErrors({ invalid: true });
     this.clockDatesForm.reset();
   }
@@ -165,6 +167,7 @@ export class AdminHomeComponent implements OnInit {
           const aux: any = data;
           this.selectedUser = {
             username: this.selectedUser.username,
+            displayName: this.selectedUser.displayName,
             clocks: aux.body.clocks,
             issues: aux.body.issues
           };
@@ -241,7 +244,11 @@ export class AdminHomeComponent implements OnInit {
   }
 
   saveAsExcel() {
-    if (this.clockTable) {
+    const invalidDates = DateHourValidator.dateBeforeValidator(
+      this.clockDatesForm.get("clock_since"),
+      this.clockDatesForm.get("clock_until")
+    );
+    if (this.clockTable && this.clockDatesForm.valid && !invalidDates) {
       const ws: XLSX.WorkSheet = XLSX.utils.table_to_sheet(
         this.clockTable.nativeElement,
         { raw: true }
@@ -255,7 +262,9 @@ export class AdminHomeComponent implements OnInit {
         );
         XLSX.utils.book_append_sheet(wb, ws2, "Incidencias");
       }
-      XLSX.writeFile(wb, "Fichajes_" + this.selectedUser.username + ".xlsx");
+      let iD = moment(this.clockDatesForm.get('clock_since').value).format('DD-MM-YYYY');
+      let oD = moment(this.clockDatesForm.get('clock_until').value).format('DD-MM-YYYY');
+      XLSX.writeFile(wb, "Fichajes_" + this.selectedUser.displayName.replace(/\s/g, "") + "_" + iD + "_" + oD + ".xlsx");
     } else {
       this.alert.fire({
         title: "Error",
