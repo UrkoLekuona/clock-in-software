@@ -17,9 +17,11 @@ import {
   MatSelectModule,
   MatFormFieldModule,
   MatTableModule,
+  MatPaginatorModule,
+  MatTooltipModule,
   MatProgressSpinnerModule,
-  MAT_DATE_LOCALE,
-  MatDividerModule
+  MatDividerModule,
+  DateAdapter
 } from "@angular/material";
 
 import { MatTableExporterModule } from "mat-table-exporter";
@@ -34,6 +36,7 @@ import { HomeComponent } from "./home/home.component";
 import { IssueComponent } from "./issue/issue.component";
 import { IssueFormComponent } from './issue-form/issue-form.component';
 import { AdminHomeComponent } from './admin-home/admin-home.component';
+import { MyDateAdapter } from "./my-date-adapter";
 
 @NgModule({
   declarations: [AppComponent, LoginComponent, HomeComponent, IssueComponent, IssueFormComponent, AdminHomeComponent],
@@ -50,6 +53,8 @@ import { AdminHomeComponent } from './admin-home/admin-home.component';
     MatNativeDateModule,
     MatFormFieldModule,
     MatTableModule,
+    MatPaginatorModule,
+    MatTooltipModule,
     MatSelectModule,
     MatDividerModule,
     MatProgressSpinnerModule,
@@ -67,9 +72,13 @@ import { AdminHomeComponent } from './admin-home/admin-home.component';
       useClass: RequestInterceptor,
       multi: true
     },
-    {provide: MAT_DATE_LOCALE, useValue: 'es-ES'}
+    {provide: DateAdapter, useClass: MyDateAdapter}
   ],
   bootstrap: [AppComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class AppModule {}
+export class AppModule {
+  constructor(private dateAdapter: DateAdapter<Date>) {
+    this.dateAdapter.setLocale('es-ES');
+  }
+}

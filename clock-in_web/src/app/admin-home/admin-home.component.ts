@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from "@angular/core";
+import { Component, OnInit, ViewChild, ElementRef, ViewChildren, QueryList } from "@angular/core";
 import {
   FormControl,
   FormGroup,
@@ -8,12 +8,13 @@ import {
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
 import * as moment from "moment";
+import { Address4, Address6 } from "ip-address";
 
 import { NetworkService } from "../network.service";
 import { DateHourValidator } from "../dateHourValidator";
 import { UserService } from "../user.service";
 import { Router } from "@angular/router";
-import { MatTableDataSource, MatTable } from "@angular/material";
+import { MatTableDataSource, MatTable, MatPaginator } from "@angular/material";
 
 export interface Clock {
   id: number;
@@ -55,14 +56,21 @@ export class AdminHomeComponent implements OnInit {
   selectedUser: User = undefined;
   loading: boolean = false;
   clockDatesForm: FormGroup;
+  tooltip_position = 'after';
   alert = Swal.mixin({
     confirmButtonText: "Vale",
     allowOutsideClick: false,
     allowEscapeKey: false
   });
+  paginator: MatPaginator;
+
   @ViewChild("exporter", { static: false }) exporter: any;
   @ViewChild("clockTable", { static: false }) clockTable: ElementRef;
   @ViewChild("issueTable", { static: false }) issueTable: ElementRef;
+  @ViewChild(MatPaginator, { static: false }) set matPaginator(mp: MatPaginator) {
+    this.paginator = mp;
+    if (this.paginator) this.dataSourceClock.paginator = this.paginator;
+  }
 
   public displayedColumnsClock = ["id", "inDate", "inIp", "outDate", "outIp"];
   public dataSourceClock: MatTableDataSource<Clock>;
@@ -149,7 +157,9 @@ export class AdminHomeComponent implements OnInit {
   }
 
   loadUser(user) {
-    this.selectedUser = this.users.find(x => { return x.username === user; });
+    this.selectedUser = this.users.find(x => {
+      return x.username === user;
+    });
     this.clockDatesForm.get("clock_since").setErrors({ invalid: true });
     this.clockDatesForm.reset();
   }
@@ -179,6 +189,10 @@ export class AdminHomeComponent implements OnInit {
           );
           let totalHour = 0;
           this.selectedUser.clocks.forEach(clock => {
+            let ip1 = new Address6(clock.inIp);
+            clock.inIp = ip1.to4().address;
+            let ip2 = new Address6(clock.outIp);
+            clock.outIp = ip2.to4().address;
             if (
               !clock.inDate.includes("Invalid") &&
               !clock.outDate.includes("Invalid")
@@ -191,12 +205,12 @@ export class AdminHomeComponent implements OnInit {
           let diffHour = 0;
           this.selectedUser.issues.forEach(issue => {
             diffHour += issue.diffInDate + issue.diffOutDate;
-          }); 
+          });
           this.selectedUser.totalHour = totalHour;
           this.selectedUser.diffHour = diffHour;
           this.selectedUser.totalHourAfterDiff = totalHour + diffHour;
-          console.log(aux.body);
-          console.log(this.selectedUser.totalHour);
+          this.dataSourceClock.paginator = this.paginator;
+          console.log(this.paginator);
         },
         err => {
           console.log(err);
@@ -262,9 +276,22 @@ export class AdminHomeComponent implements OnInit {
         );
         XLSX.utils.book_append_sheet(wb, ws2, "Incidencias");
       }
-      let iD = moment(this.clockDatesForm.get('clock_since').value).format('DD-MM-YYYY');
-      let oD = moment(this.clockDatesForm.get('clock_until').value).format('DD-MM-YYYY');
-      XLSX.writeFile(wb, "Fichajes_" + this.selectedUser.displayName.replace(/\s/g, "") + "_" + iD + "_" + oD + ".xlsx");
+      let iD = moment(this.clockDatesForm.get("clock_since").value).format(
+        "DD-MM-YYYY"
+      );
+      let oD = moment(this.clockDatesForm.get("clock_until").value).format(
+        "DD-MM-YYYY"
+      );
+      XLSX.writeFile(
+        wb,
+        "Fichajes_" +
+          this.selectedUser.displayName.replace(/\s/g, "") +
+          "_" +
+          iD +
+          "_" +
+          oD +
+          ".xlsx"
+      );
     } else {
       this.alert.fire({
         title: "Error",
@@ -277,11 +304,24 @@ export class AdminHomeComponent implements OnInit {
   timeConvert(value) {
     let num = value;
     let hours = num / 60;
-    let rhours = (hours >= 0) ? Math.floor(hours) : Math.ceil(hours);
+    let rhours = hours >= 0 ? Math.floor(hours) : Math.ceil(hours);
     let minutes = num % 60;
     let rminutes = Math.round(minutes);
-    return (
-      rhours + " horas y " + rminutes + " minutos"
-    );
+    return rhours + " horas y " + rminutes + " minutos";
+  }
+
+  todayMinutes(date) {
+    let day = moment(date, "DD/MM/YYYY HH:mm:ss", true);
+    let min = 0;
+    this.selectedUser.clocks.forEach(clock => {
+      if (
+        moment(clock.inDate, "DD/MM/YYYY HH:mm:ss", true).isSame(day, "day")
+      ) {
+        let d1 = moment(clock.inDate, "DD/MM/YYYY HH:mm:ss", true);
+        let d2 = moment(clock.outDate, "DD/MM/YYYY HH:mm:ss", true);
+        min += d2.diff(d1, "minutes");
+      }
+    });
+    return min;
   }
 }

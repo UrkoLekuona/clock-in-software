@@ -103,31 +103,38 @@ function isAdmin(req, res, next) {
 // and send it as body, which will grant authorization for future requests
 app.post('/login', passport.authenticate('ldapauth', {session: false}), (req, res) => {
   var privateKey = fs.readFileSync('jwtRS256.key', 'utf8');
-  mariadb.createConnection(db_opts).then(conn => {
-    conn.query("INSERT IGNORE INTO users VALUES(?)", req.body.username).then((dbres) => {
-      conn.query("SELECT inDate, outDate FROM clock WHERE user=? and inDate=(SELECT MAX(inDate) FROM clock WHERE user=?)", [req.body.username, req.body.username]).then(rows => {
-        if (rows[0] === undefined || rows[0].inDate == null) {
-	  date = 'none';
-	  type = 'none';
-	} else if (rows[0].outDate == null) {
-	  date = new Date(rows[0].inDate);
-	  type = 'in';
-	} else {
-	  date = new Date(rows[0].outDate);
-	  type = 'out';
-	}
-	let admin = false;
-	if (req.user.employeeType && req.user.employeeType === 'fichajeAdmin') {
-          admin = true;
-	}
-	var token = jwt.sign({ user: req.body.username, admin: admin }, privateKey, { algorithm: 'RS256', expiresIn: '1h' });
-        res.send({ status: 'logged', date: date, type: type, token: token });      
-        conn.end();
+  var ldapsearch = 'ldapsearch -LLL -H \'' + OPTS.server.url + '\' -x -D \'' + OPTS.server.bindDN + '\' -w \'' + pass_file.ldap + '\' -b \'' + OPTS.server.searchBase + '\' "(uid=' + req.body.username + ')" | grep displayName: | cut -d\':\' -f2 | awk \'{$1=$1};1\'';
+  exec(ldapsearch, (err, stdout, stderr) => {
+    if (err) {
+      error(err, 'Exec command error', 500, req.ip, res);
+    }
+    var fullname = stdout;
+    mariadb.createConnection(db_opts).then(conn => {
+      conn.query("INSERT IGNORE INTO users VALUES(?,?)", [req.body.username, fullname]).then((dbres) => {
+        conn.query("SELECT inDate, outDate FROM clock WHERE user=? and inDate=(SELECT MAX(inDate) FROM clock WHERE user=?)", [req.body.username, req.body.username]).then(rows => {
+          if (rows[0] === undefined || rows[0].inDate == null) {
+            date = 'none';
+	    type = 'none';
+          } else if (rows[0].outDate == null) {
+	    date = new Date(rows[0].inDate);
+	    type = 'in';
+	  } else {
+	    date = new Date(rows[0].outDate);
+	    type = 'out';
+	  }
+	  let admin = false;
+	  if (req.user.employeeType && req.user.employeeType === 'fichajeAdmin') {
+            admin = true;
+	  }
+	  var token = jwt.sign({ user: req.body.username, admin: admin }, privateKey, { algorithm: 'RS256', expiresIn: '1h' });
+          res.send({ status: 'logged', date: date, type: type, token: token });      
+          conn.end();
+        });
       });
+    })
+    .catch(err => {
+      error(err, 'DB connection error', 500, req.ip, res);
     });
-  })
-  .catch(err => {
-    error(err, 'DB connection error', 500, req.ip, res);
   });      
 });
 
@@ -321,7 +328,7 @@ app.post('/issueform', function(req, res, next) {
 
 app.get('/allusers', isAdmin, function(req, res, next) {
   mariadb.createConnection(db_opts).then(conn => {
-    conn.query("SELECT username FROM users").then((dbres) => {
+    conn.query("SELECT username, displayName FROM users").then((dbres) => {
       if (dbres != undefined) {
         res.send({  status: 'ok', users: dbres });
         conn.end();
@@ -340,13 +347,13 @@ app.post('/clocksBetweenDates', isAdmin, function(req, res, next) {
   let maxDate = moment(req.body.maxDate, 'DD/MM/YYYY', true);
   if (req.body.user && minDate.isValid() && maxDate.isValid() && minDate.isSameOrBefore(maxDate)) {
     mariadb.createConnection(db_opts).then(conn => {
-      conn.query("SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND (outDate<=? OR (outDate IS NULL && TIMESTAMPDIFF(HOUR, inDate, NOW())>24))", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((clockres) => {
+      conn.query("SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND outDate<=?", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((clockres) => {
         if (clockres != undefined) {
           clockres.forEach(row => {
             row['inDate'] = moment(row.inDate).format('DD/MM/YYYY HH:mm:ss');
             row['outDate'] = moment(row.outDate).format('DD/MM/YYYY HH:mm:ss');
 	  });
-          conn.query("SELECT id, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate FROM issue WHERE user=? AND rInDate>=? AND (rOutDate<=? OR rOutDate IS NULL)", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((issueres) => {
+          conn.query("SELECT id, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate FROM issue WHERE user=? AND rInDate>=? AND rOutDate<=?", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((issueres) => {
             if (issueres != undefined) {
               issueres.forEach(row => {
                 row['date'] = moment(row.date).format('DD/MM/YYYY');

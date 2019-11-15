@@ -135,7 +135,7 @@ body {
 }
 
 .table-container {
-  max-height: 300px;
+  max-height: 370px;
   overflow: auto;
 }
 
@@ -165,7 +165,7 @@ table.mat-table {
 }
 
 .mat-cell.yellow {
-  background-color: #e4e26c;
+  background-color: #e7d04f;
 }
 
 tr.mat-header-row, tr.mat-row, tr.mat-footer-row {
