@@ -108,17 +108,25 @@ In this section, we'll configure a cron task that will dump all information from
 /usr/sbin/logrotate /etc/logrotate.d/dbbackup
 
 ```
+
+and edit "/root/.mariadblogin.cnf" to contain the following (change credentials to match your mariadb root credentials):
+```
+[client]
+user = root
+password = rootpass
+```
 2. **Logrotate**. The first part is already done, as you can see in the daily cron task. We just need to make a configuration file named "/etc/logrotate.d/dbbackup" and fill it with:
 ```
 /root/dbbackup/*.sql {
   daily
+  rotate 5
   missingok
   compress
-  notifempty
   postrotate
-        /usr/bin/find /root/dbbackup -name "*.sql" -type f -mtime +0 -exec rm {} \;
+        /usr/bin/find /root/dbbackup -name "*.sql" -type f -mtime +7 -exec rm {} \;
+        /usr/bin/find /root/dbbackup -name "*.gz" -type f -mtime +180 -exec rm {} \;
   endscript
-  maxage 180
+  maxage 7
 }
 ```
 3. **NFS configuration**.
