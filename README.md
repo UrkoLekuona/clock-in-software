@@ -92,6 +92,7 @@ Changes to Angular application are applied building the new code and restarting 
 # cd /var/www/html && ng build --prod
 # systemctl restart nginx
 ```
+**Please remember to change your backend server IP in /var/www/html/src/app/network.service.ts before building**
 
 Please let me know if you find that something is missing.
 
@@ -110,11 +111,14 @@ In this section, we'll configure a cron task that will dump all information from
 2. **Logrotate**. The first part is already done, as you can see in the daily cron task. We just need to make a configuration file named "/etc/logrotate.d/dbbackup" and fill it with:
 ```
 /root/dbbackup/*.sql {
-  weekly
+  daily
   missingok
-  rotate 4
   compress
   notifempty
+  postrotate
+        /usr/bin/find /root/dbbackup -name "*.sql" -type f -mtime +0 -exec rm {} \;
+  endscript
+  maxage 180
 }
 ```
 3. **NFS configuration**.

@@ -18,10 +18,12 @@ import {
   MatFormFieldModule,
   MatTableModule,
   MatPaginatorModule,
+  MatPaginatorIntl,
   MatTooltipModule,
   MatProgressSpinnerModule,
   MatDividerModule,
-  DateAdapter
+  DateAdapter,
+  MAT_HAMMER_OPTIONS
 } from "@angular/material";
 
 import { MatTableExporterModule } from "mat-table-exporter";
@@ -37,9 +39,11 @@ import { IssueComponent } from "./issue/issue.component";
 import { IssueFormComponent } from './issue-form/issue-form.component';
 import { AdminHomeComponent } from './admin-home/admin-home.component';
 import { MyDateAdapter } from "./my-date-adapter";
+import { getSpanishPaginatorIntl } from './spanish-paginator-intl';
+import { IssueDialogComponent } from "./issue-dialog/issue-dialog.component";
 
 @NgModule({
-  declarations: [AppComponent, LoginComponent, HomeComponent, IssueComponent, IssueFormComponent, AdminHomeComponent],
+  declarations: [AppComponent, LoginComponent, HomeComponent, IssueComponent, IssueDialogComponent, IssueFormComponent, AdminHomeComponent],
   imports: [
     BrowserModule,
     MatButtonModule,
@@ -72,9 +76,12 @@ import { MyDateAdapter } from "./my-date-adapter";
       useClass: RequestInterceptor,
       multi: true
     },
-    {provide: DateAdapter, useClass: MyDateAdapter}
+    { provide: DateAdapter, useClass: MyDateAdapter },
+    { provide: MAT_HAMMER_OPTIONS, useValue: { cssProps: { userSelect: true } } },
+    { provide: MatPaginatorIntl, useValue: getSpanishPaginatorIntl() }
   ],
   bootstrap: [AppComponent],
+  entryComponents: [IssueDialogComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class AppModule {

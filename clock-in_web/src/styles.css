@@ -171,3 +171,7 @@ table.mat-table {
 tr.mat-header-row, tr.mat-row, tr.mat-footer-row {
   display: flex;
 }
+
+.mat-divider{
+  border-top-width: 3px;
+}

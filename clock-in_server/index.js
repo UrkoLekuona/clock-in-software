@@ -239,50 +239,26 @@ app.post('/lastclock', function(req, res, next) {
 
 // A request is attempting to write an issue
 app.post('/issue', function(req, res, next) {
-  res.end();
-  return;
-  var issue = req.body.issue;
-  if (issue !== undefined && issue.text !== undefined && issue.text.length < 2550) {
+  var date = moment(req.body.date, 'DD/MM/YYYY', true);
+  var nInDate = moment(req.body.nInDate, 'DD/MM/YYYY HH:mm', true);
+  var nOutDate = moment(req.body.nOutDate, 'DD/MM/YYYY HH:mm', true);
+  if (req.body.id !== undefined && req.body.text !== undefined && req.body.text.length < 2550 && date.isValid() && nInDate.isValid() && nOutDate.isValid()) {
     mariadb.createConnection(db_opts).then(conn => {
-      if (id !== undefined) {
-        conn.query("INSERT INTO issue(clock_id, user, date, text, noted) VALUES(?,NOW(),?,0)", [id, req.user.user, issue]).then((dbres) => {
-          if (req.body.inDate != undefined) {
-            conn.query("UPDATE clock SET inDate=?, inConfirmed=0 WHERE id=?", [req.body.inDate, id]).then(upres => {
-              res.send({ status: 'ok' });
-              conn.end();
-            })
-            .catch(err => {
-              error(err, 'DB update error', 500, req.ip, res);
-            });
-          }
-          if (req.body.outDate != undefined) {
-            conn.query("UPDATE clock SET outDate=?, outConfirmed=0 WHERE id=?", [req.body.outDate, id]).then(upres => {
-              res.send({ status: 'ok' });
-              conn.end();
-            })
-            .catch(err => {
-              error(err, 'DB update error', 500, req.ip, res);
-            });
-          }
-        })
-        .catch(err => {
-          error(err, 'DB insert error', 500, req.ip, res);
-        });
-      } else {
-        conn.query("INSERT INTO issue(user, date, text, noted) VALUES(?,NOW(),?,0)", [req.user.user, issue]).then((dbres) => {
-          res.send({ status: 'ok' });
-          conn.end();
-        })
-        .catch(err => {
-          error(err, 'DB insert error', 500, req.ip, res);
-        });
-      }
+      var formatIn = nInDate.format('YYYY-MM-DD HH:mm');
+      var formatOut = nOutDate.format('YYYY-MM-DD HH:mm');
+      conn.query("INSERT INTO issue(clock_id, user, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate) SELECT c.id, c.user, ?, ?, c.inDate, ?, TIMESTAMPDIFF(minute, ?, c.inDate), c.outDate, ?, TIMESTAMPDIFF(minute, c.outDate, ?) from clock as c where id=?;", [date.format('YYYY-MM-DD'), req.body.text, formatIn, formatIn, formatOut, formatOut, req.body.id]).then((dbres) => {
+        conn.end();
+        res.send({ status: 'ok' });
+      })
+      .catch(err => {
+        error(err, 'Error inserting issue', 500, req.ip, res);      
+      });
     })
     .catch(err => {
-      error(err, 'DB connection error', 500, req.ip, res);      
+      error(err, 'DB connection error', 500, req.ip, res);
     });
   } else {
-    error('Bad request: text must be between 0 and 2550 characters long', 'Issue', 400, req.ip, res);    
+    error('Bad request: Invalid issue', 'Issue', 400, req.ip, res);    
   }
 });
 

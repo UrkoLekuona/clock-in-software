@@ -1,10 +1,16 @@
-import { Component, OnInit, ViewChild, ElementRef, ViewChildren, QueryList } from "@angular/core";
+import { Component, OnInit, ViewChild, ElementRef } from "@angular/core";
 import {
   FormControl,
   FormGroup,
   Validators,
   FormBuilder
 } from "@angular/forms";
+import {
+  MatTableDataSource,
+  MatPaginator,
+  MatDialog,
+  MatDialogConfig
+} from "@angular/material";
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
 import * as moment from "moment";
@@ -14,7 +20,7 @@ import { NetworkService } from "../network.service";
 import { DateHourValidator } from "../dateHourValidator";
 import { UserService } from "../user.service";
 import { Router } from "@angular/router";
-import { MatTableDataSource, MatTable, MatPaginator } from "@angular/material";
+import { IssueDialogComponent } from "../issue-dialog/issue-dialog.component";
 
 export interface Clock {
   id: number;
@@ -22,6 +28,7 @@ export interface Clock {
   inIp: string;
   outDate: string;
   outIp: string;
+  todayHours?: string;
 }
 
 export interface Issue {
@@ -56,7 +63,8 @@ export class AdminHomeComponent implements OnInit {
   selectedUser: User = undefined;
   loading: boolean = false;
   clockDatesForm: FormGroup;
-  tooltip_position = 'after';
+  tooltip_position = "after";
+  dailyArray: {} = {};
   alert = Swal.mixin({
     confirmButtonText: "Vale",
     allowOutsideClick: false,
@@ -67,12 +75,22 @@ export class AdminHomeComponent implements OnInit {
   @ViewChild("exporter", { static: false }) exporter: any;
   @ViewChild("clockTable", { static: false }) clockTable: ElementRef;
   @ViewChild("issueTable", { static: false }) issueTable: ElementRef;
-  @ViewChild(MatPaginator, { static: false }) set matPaginator(mp: MatPaginator) {
+  @ViewChild(MatPaginator, { static: false }) set matPaginator(
+    mp: MatPaginator
+  ) {
     this.paginator = mp;
-    if (this.paginator) this.dataSourceClock.paginator = this.paginator;
+    if (this.paginator && this.dataSourceClock)
+      this.dataSourceClock.paginator = this.paginator;
   }
 
-  public displayedColumnsClock = ["id", "inDate", "inIp", "outDate", "outIp"];
+  public displayedColumnsClock = [
+    "id",
+    "inDate",
+    "inIp",
+    "outDate",
+    "outIp",
+    "issue"
+  ];
   public dataSourceClock: MatTableDataSource<Clock>;
   public displayedColumnsIssue = [
     "id",
@@ -91,7 +109,8 @@ export class AdminHomeComponent implements OnInit {
     private network: NetworkService,
     private formBuilder: FormBuilder,
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private issueDialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -171,6 +190,7 @@ export class AdminHomeComponent implements OnInit {
     );
     if (this.clockDatesForm.valid && !invalidDates) {
       this.loading = true;
+      this.dailyArray = {};
       value["user"] = this.selectedUser.username;
       this.network.clocksBetweenDates(value).subscribe(
         data => {
@@ -189,10 +209,12 @@ export class AdminHomeComponent implements OnInit {
           );
           let totalHour = 0;
           this.selectedUser.clocks.forEach(clock => {
-            let ip1 = new Address6(clock.inIp);
-            clock.inIp = ip1.to4().address;
-            let ip2 = new Address6(clock.outIp);
-            clock.outIp = ip2.to4().address;
+            try {
+              let ip1 = new Address6(clock.inIp);
+              clock.inIp = ip1.to4().address;
+              let ip2 = new Address6(clock.outIp);
+              clock.outIp = ip2.to4().address;
+            } catch {}
             if (
               !clock.inDate.includes("Invalid") &&
               !clock.outDate.includes("Invalid")
@@ -200,7 +222,14 @@ export class AdminHomeComponent implements OnInit {
               let d1 = moment(clock.inDate, "DD/MM/YYYY HH:mm:ss", true);
               let d2 = moment(clock.outDate, "DD/MM/YYYY HH:mm:ss", true);
               totalHour += d2.diff(d1, "minutes");
+              this.insertIntoDailyArray(clock);
             }
+          });
+          this.selectedUser.clocks.forEach(clock => {
+            let d1 = moment(clock.inDate, "DD/MM/YYYY HH:mm:ss", true);
+            clock.todayHours = this.timeConvert(
+              this.dailyArray[d1.format("DD/MM/YYYY")]
+            );
           });
           let diffHour = 0;
           this.selectedUser.issues.forEach(issue => {
@@ -210,7 +239,6 @@ export class AdminHomeComponent implements OnInit {
           this.selectedUser.diffHour = diffHour;
           this.selectedUser.totalHourAfterDiff = totalHour + diffHour;
           this.dataSourceClock.paginator = this.paginator;
-          console.log(this.paginator);
         },
         err => {
           console.log(err);
@@ -267,6 +295,7 @@ export class AdminHomeComponent implements OnInit {
         this.clockTable.nativeElement,
         { raw: true }
       );
+      this.delete_col(ws, this.displayedColumnsClock.length - 1);
       const wb: XLSX.WorkBook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Fichajes");
       if (this.issueTable) {
@@ -310,18 +339,52 @@ export class AdminHomeComponent implements OnInit {
     return rhours + " horas y " + rminutes + " minutos";
   }
 
-  todayMinutes(date) {
-    let day = moment(date, "DD/MM/YYYY HH:mm:ss", true);
-    let min = 0;
-    this.selectedUser.clocks.forEach(clock => {
-      if (
-        moment(clock.inDate, "DD/MM/YYYY HH:mm:ss", true).isSame(day, "day")
-      ) {
-        let d1 = moment(clock.inDate, "DD/MM/YYYY HH:mm:ss", true);
-        let d2 = moment(clock.outDate, "DD/MM/YYYY HH:mm:ss", true);
-        min += d2.diff(d1, "minutes");
+  insertIntoDailyArray(clock) {
+    let day = moment(clock.inDate, "DD/MM/YYYY HH:mm:ss", true).format(
+      "DD/MM/YYYY"
+    );
+    let d1 = moment(clock.inDate, "DD/MM/YYYY HH:mm:ss", true);
+    let d2 = moment(clock.outDate, "DD/MM/YYYY HH:mm:ss", true);
+    if (this.dailyArray[day]) {
+      this.dailyArray[day] += d2.diff(d1, "minutes");
+    } else {
+      this.dailyArray[day] = d2.diff(d1, "minutes");
+    }
+  }
+
+  ec(r, c) {
+    return XLSX.utils.encode_cell({ r: r, c: c });
+  }
+
+  delete_col(ws, col_index) {
+    var variable = XLSX.utils.decode_range(ws["!ref"]);
+    for (var R = variable.s.r; R < variable.e.r; ++R) {
+      for (var C = col_index; C <= variable.e.c; ++C) {
+        ws[this.ec(R, C)] = ws[this.ec(R, C + 1)];
       }
-    });
-    return min;
+    }
+    variable.e.c--;
+    ws["!ref"] = XLSX.utils.encode_range(variable.s, variable.e);
+  }
+
+  openIssue(clock) {
+    console.log("Opening dialog...");
+    const dialogConfig = new MatDialogConfig();
+
+    dialogConfig.disableClose = true;
+    dialogConfig.autoFocus = true;
+
+    dialogConfig.data = clock;
+
+    const dialogRef = this.issueDialog.open(IssueDialogComponent, dialogConfig);
+
+    dialogRef
+      .afterClosed()
+      .subscribe(data => {
+        console.log(data);
+        if (data === 'ok') {
+          this.clocksBetweenDates(this.clockDatesForm.value);
+        }
+      });
   }
 }
