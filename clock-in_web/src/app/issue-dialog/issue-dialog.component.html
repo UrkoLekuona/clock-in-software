@@ -1,0 +1,65 @@
+<h1 mat-dialog-title>Nueva incidencia</h1>
+
+<mat-dialog-content [formGroup]="issueForm">
+  <mat-form-field>
+    <mat-label>Texto incidencia</mat-label>
+    <textarea
+      formControlName="text"
+      placeholder="Texto"
+      matInput
+      cdkTextareaAutosize
+      cdkAutosizeMinRows="1"
+      cdkAutosizeMaxRows="5"
+      maxlength="2550"
+    ></textarea>
+  </mat-form-field>
+  &nbsp;
+  <mat-form-field>
+    <mat-label>Fecha incidencia</mat-label>
+    <input matInput placeholder="DD/MM/AAAA" formControlName="date" />
+  </mat-form-field>
+  <mat-divider></mat-divider>
+
+  <h3 mat-dialog-subtitle>Fecha de entrada</h3>
+  <mat-form-field>
+    <mat-label>Fecha fichaje</mat-label>
+    <input matInput formControlName="rInDate" />
+  </mat-form-field>
+  &nbsp;
+  <mat-form-field>
+    <mat-label>Fecha actualizada</mat-label>
+    <input matInput formControlName="nInDate" placeholder="DD/MM/AAAA HH:mm" />
+  </mat-form-field>
+  <mat-divider></mat-divider>
+
+  <h3 mat-dialog-subtitle>Fecha de salida</h3>
+  <mat-form-field>
+    <mat-label>Fecha fichaje</mat-label>
+    <input matInput formControlName="rOutDate" />
+  </mat-form-field>
+  &nbsp;
+  <mat-form-field>
+    <mat-label>Fecha actualizada</mat-label>
+    <input matInput formControlName="nOutDate" placeholder="DD/MM/AAAA HH:mm" />
+  </mat-form-field>
+</mat-dialog-content>
+<mat-divider></mat-divider>
+<br/>
+<mat-grid-list cols="2" rowHeight="4:1">
+  <mat-grid-tile
+    ><button class="mat-raised-button" style="width: 100%;" (click)="close()">
+      Cerrar
+    </button></mat-grid-tile
+  >
+  <mat-grid-tile
+    ><button
+      class="mat-raised-button mat-primary"
+      style="width: 100%;"
+      (click)="save()"
+      [disabled]="!issueForm.valid"
+      ng-disabled="!issueForm.valid"
+    >
+      Guardar
+    </button></mat-grid-tile
+  >
+</mat-grid-list>

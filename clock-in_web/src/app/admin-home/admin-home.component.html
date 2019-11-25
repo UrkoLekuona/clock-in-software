@@ -8,11 +8,11 @@
         (selectionChange)="loadUser($event.value)"
       >
         <mat-option *ngFor="let user of users" [value]="user.username">
-          {{ user.username }}
+          {{ user.displayName }}
         </mat-option>
       </mat-select>
     </mat-form-field>
-    <form [formGroup]="clockDatesForm">
+    <form *ngIf="selectedUser" [formGroup]="clockDatesForm">
       <mat-form-field style="margin-right: 5%;">
         <mat-label>Desde</mat-label>
         <input
@@ -109,6 +109,15 @@
                   }}</strong></mat-footer-cell
                 >
               </ng-container>
+              <ng-container matColumnDef="issue">
+                <mat-header-cell *matHeaderCellDef>Incidencia</mat-header-cell>
+                <mat-cell *matCellDef="let clock">
+                  <button mat-icon-button color="accent">
+                    <mat-icon class="mat-18">create</mat-icon>
+                  </button>
+                </mat-cell>
+                <mat-footer-cell *matFooterCellDef></mat-footer-cell>
+              </ng-container>
               <tr
                 mat-header-row
                 *matHeaderRowDef="displayedColumnsClock; sticky: true"
@@ -126,7 +135,12 @@
           <mat-table class="clockTable" [dataSource]="dataSourceClock">
             <ng-container matColumnDef="id">
               <mat-header-cell *matHeaderCellDef>Identificador</mat-header-cell>
-              <mat-cell *matCellDef="let clock">{{ clock.id }}</mat-cell>
+              <mat-cell
+                [matTooltip]="clock.todayHours"
+                [matTooltipPosition]="tooltip_position"
+                *matCellDef="let clock"
+                >{{ clock.id }}</mat-cell
+              >
               <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="inDate">
@@ -173,15 +187,15 @@
                 }}</strong></mat-footer-cell
               >
             </ng-container>
-            <!--<ng-container matColumnDef="update">
-              <mat-header-cell *matHeaderCellDef>Actualizar</mat-header-cell>
+            <ng-container matColumnDef="issue">
+              <mat-header-cell *matHeaderCellDef>Incidencia</mat-header-cell>
               <mat-cell *matCellDef="let clock">
-                <button mat-icon-button color="accent">
-                  <mat-icon class="mat-18">save</mat-icon>
+                <button mat-icon-button (click)="openIssue(clock)">
+                  <mat-icon class="mat-18">create</mat-icon>
                 </button>
               </mat-cell>
+              <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
-          -->
             <mat-header-row
               *matHeaderRowDef="displayedColumnsClock; sticky: true"
             ></mat-header-row>
@@ -193,6 +207,11 @@
             ></mat-footer-row>
           </mat-table>
         </div>
+        <mat-paginator
+          *ngIf="selectedUser.clocks?.length > 0"
+          [pageSizeOptions]="[5, 10, 20, 100, selectedUser.clocks?.length]"
+          showFirstLastButtons
+        ></mat-paginator>
       </mat-card-content>
     </mat-card>
     <br />
@@ -437,7 +456,7 @@
                   ? 'red'
                   : ''
               "
-              >{{ issue.diffOutDate }}</mat-cell
+              >{{ issue.diffOutDate ? issue.diffOutDate : 0 }}</mat-cell
             ><mat-footer-cell *matFooterCellDef
               ><strong>{{
                 timeConvert(selectedUser.totalHourAfterDiff)

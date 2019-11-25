@@ -17,9 +17,13 @@ import {
   MatSelectModule,
   MatFormFieldModule,
   MatTableModule,
+  MatPaginatorModule,
+  MatPaginatorIntl,
+  MatTooltipModule,
   MatProgressSpinnerModule,
-  MAT_DATE_LOCALE,
-  MatDividerModule
+  MatDividerModule,
+  DateAdapter,
+  MAT_HAMMER_OPTIONS
 } from "@angular/material";
 
 import { MatTableExporterModule } from "mat-table-exporter";
@@ -34,9 +38,12 @@ import { HomeComponent } from "./home/home.component";
 import { IssueComponent } from "./issue/issue.component";
 import { IssueFormComponent } from './issue-form/issue-form.component';
 import { AdminHomeComponent } from './admin-home/admin-home.component';
+import { MyDateAdapter } from "./my-date-adapter";
+import { getSpanishPaginatorIntl } from './spanish-paginator-intl';
+import { IssueDialogComponent } from "./issue-dialog/issue-dialog.component";
 
 @NgModule({
-  declarations: [AppComponent, LoginComponent, HomeComponent, IssueComponent, IssueFormComponent, AdminHomeComponent],
+  declarations: [AppComponent, LoginComponent, HomeComponent, IssueComponent, IssueDialogComponent, IssueFormComponent, AdminHomeComponent],
   imports: [
     BrowserModule,
     MatButtonModule,
@@ -50,6 +57,8 @@ import { AdminHomeComponent } from './admin-home/admin-home.component';
     MatNativeDateModule,
     MatFormFieldModule,
     MatTableModule,
+    MatPaginatorModule,
+    MatTooltipModule,
     MatSelectModule,
     MatDividerModule,
     MatProgressSpinnerModule,
@@ -67,9 +76,16 @@ import { AdminHomeComponent } from './admin-home/admin-home.component';
       useClass: RequestInterceptor,
       multi: true
     },
-    {provide: MAT_DATE_LOCALE, useValue: 'es-ES'}
+    { provide: DateAdapter, useClass: MyDateAdapter },
+    { provide: MAT_HAMMER_OPTIONS, useValue: { cssProps: { userSelect: true } } },
+    { provide: MatPaginatorIntl, useValue: getSpanishPaginatorIntl() }
   ],
   bootstrap: [AppComponent],
+  entryComponents: [IssueDialogComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class AppModule {}
+export class AppModule {
+  constructor(private dateAdapter: DateAdapter<Date>) {
+    this.dateAdapter.setLocale('es-ES');
+  }
+}

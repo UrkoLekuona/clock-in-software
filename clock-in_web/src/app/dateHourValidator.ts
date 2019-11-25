@@ -9,6 +9,13 @@ export class DateHourValidator {
     return null;
   }
 
+  static dateHourValidator(AC: AbstractControl) {
+    if (AC && AC.value && !moment(AC.value, 'DD/MM/YYYY HH:mm',true).isValid()) {
+      return {'dateHourValidator': true};
+    }
+    return null;
+  }
+
   static hourValidator(AC: AbstractControl) {
     if (AC && AC.value && !moment(AC.value, 'HH:mm',true).isValid()) {
       return {'hourValidator': true};
@@ -22,4 +29,5 @@ export class DateHourValidator {
     }
     return null;
   }
+
 }

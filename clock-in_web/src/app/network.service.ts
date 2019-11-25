@@ -45,7 +45,13 @@ export class NetworkService {
 
   issue(value) {
     let body = new URLSearchParams();
-    body.set('issue', value);
+    body.set('id', value.id);
+    body.set('date', value.date);
+    body.set('text', value.text);
+    body.set('nInDate', value.nInDate);
+    body.set('nOutDate', value.nOutDate);
+    console.log(value);
+    console.log(body.toString());
     let options = this.httpOptions;
     options.observe = 'response' as "body";
     return this.http.post(this.protocol + this.webserver + this.api + '/issue', body.toString(), options);
