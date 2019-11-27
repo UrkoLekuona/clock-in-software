@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 
 import { NetworkService } from "../network.service";
 import { UserService } from "../user.service";
+import { ErrorService } from "../error.service";
 
 @Component({
   selector: "app-home",
@@ -25,7 +26,8 @@ export class HomeComponent implements OnInit {
   constructor(
     private network: NetworkService,
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private errorService: ErrorService
   ) {}
 
   ngOnInit() {}
@@ -36,7 +38,9 @@ export class HomeComponent implements OnInit {
     this.network.clock(value).subscribe(
       data => {
         console.log(data);
-        setTimeout( () => { this.disableButtons = false }, 1000);
+        setTimeout(() => {
+          this.disableButtons = false;
+        }, 1000);
         this.date = new Date();
         this.type = value;
         this.userService.fillFields(this.username, this.userService.token, {
@@ -48,72 +52,64 @@ export class HomeComponent implements OnInit {
           title: "Has fichado correctamente",
           type: "success",
           toast: true,
-          position: 'bottom',
+          position: "bottom",
           showConfirmButton: false,
           timer: 3000
         });
       },
       error => {
         console.log(error);
-        setTimeout( () => { this.disableButtons = false }, 1000);
-        switch (error.status) {
-          case 400:
-            if (error.error.status.includes("Bad request: unpaired outdate")) {
-              this.alert.fire({
-                title: "¿Abrir incidencia?",
-                text: "Estás intentando salir sin haber marcado antes una hora de entrada. Si no has podido o se te ha olvidado, ¿quieres abrir una incidencia?",
-                type: "question",
-                showCancelButton: true,
-                cancelButtonText: 'Cancelar'
-              }).then(res => {
-                if (res.value) {
-                  this.lastClock("out");
-                }
-              });
-            } else if (error.error.status.includes("Bad request: unpaired indate")) {
-              this.alert.fire({
-                title: "¿Abrir incidencia?",
-                text: "Estás intentado entrar, pero la última vez no marcaste la hora de salida. Si no pudiste o se te olvidó, ¿quieres abrir una incidencia?",
-                type: "question",
-                showCancelButton: true,
-                cancelButtonText: 'Cancelar'
-              }).then(res => {
-                if (res.value) {
-                  this.lastClock("in");
-                }
-              });
-            } else {
-              this.alert.fire({
-                title: "Error",
-                text: "Petición no válida.",
-                type: "error"
-              });
-            }
-            break;
-          case 401:
-            this.alert
-              .fire({
-                title: "Error",
-                text: "Acceso denegado. La sesión ha expirado.",
-                type: "error"
-              })
-              .then(res => {
+        setTimeout(() => {
+          this.disableButtons = false;
+        }, 1000);
+        if (
+          error.status == 400 &&
+          error.error.status.includes("Bad request: unpaired outdate")
+        ) {
+          this.alert
+            .fire({
+              title: "¿Abrir incidencia?",
+              text:
+                "Estás intentando salir sin haber marcado antes una hora de entrada. Si no has podido o se te ha olvidado, ¿quieres abrir una incidencia?",
+              type: "question",
+              showCancelButton: true,
+              cancelButtonText: "Cancelar"
+            })
+            .then(res => {
+              if (res.value) {
+                this.lastClock("out");
+              }
+            });
+        } else if (
+          error.status == 400 &&
+          error.error.status.includes("Bad request: unpaired indate")
+        ) {
+          this.alert
+            .fire({
+              title: "¿Abrir incidencia?",
+              text:
+                "Estás intentado entrar, pero la última vez no marcaste la hora de salida. Si no pudiste o se te olvidó, ¿quieres abrir una incidencia?",
+              type: "question",
+              showCancelButton: true,
+              cancelButtonText: "Cancelar"
+            })
+            .then(res => {
+              if (res.value) {
+                this.lastClock("in");
+              }
+            });
+        } else {
+          this.errorService
+            .error(error, {
+              400: "Petición no válida.",
+              401: "Acceso denegado. La sesión ha expirado.",
+              500: "Fallo del servidor. Contacte con un administrador."
+            })
+            .then(res => {
+              if (error.status == 401) {
                 this.userService.logout();
                 this.router.navigate(["/login"]);
-              });
-            break;
-          case 500:
-            this.alert.fire({
-              title: "Error",
-              text: "Fallo del servidor. Contacte con un administrador.",
-              type: "error"
-            });
-            break;
-          default:
-            this.alert.fire({
-              title: "Error",
-              text: "Fallo desconocido. Contacte con un administrador.",
-              type: "error"
+              }
             });
         }
       }
@@ -122,36 +118,6 @@ export class HomeComponent implements OnInit {
 
   lastClock(value) {
     this.router.navigate(["/issueForm"]);
-    /*this.network.lastclock(value).subscribe(res => {
-      const aux: any = res;
-      console.log(aux);
-      this.router.navigate(["/issue"], { state: aux.body });
-    },
-    err => {
-      console.log(err);
-      switch (err.status) {
-        case 400:
-          this.alert.fire({
-            title: "Error",
-            text: "Petición no válida.",
-            type: "error"
-          });
-          break;
-        case 500:
-          this.alert.fire({
-            title: "Error",
-            text: "Fallo del servidor. Contacte con un administrador.",
-            type: "error"
-          });
-          break;
-        default:
-          this.alert.fire({
-            title: "Error",
-            text: "Fallo desconocido. Contacte con un administrador.",
-            type: "error"
-          });
-      }
-    });*/
   }
 
   isValidDate(d) {
@@ -159,25 +125,30 @@ export class HomeComponent implements OnInit {
   }
 
   logout() {
-    this.alert.fire({
-      title: "¿Cerrar sesión?",
-      type: "question",
-      showCancelButton: true,
-      cancelButtonText: 'Cancelar'
-    }).then(res => {
-      if (res.value) {
-        this.userService.logout();
-        this.router.navigate(["/login"]);
-      }
-    });
+    this.alert
+      .fire({
+        title: "¿Cerrar sesión?",
+        type: "question",
+        showCancelButton: true,
+        cancelButtonText: "Cancelar"
+      })
+      .then(res => {
+        if (res.value) {
+          this.userService.logout();
+          this.router.navigate(["/login"]);
+        }
+      });
   }
 
   issue() {
-    //this.router.navigate(["/issue"]);
     this.router.navigate(["/issueForm"]);
   }
 
   adminHome() {
     this.router.navigate(["/adminHome"]);
+  }
+
+  clockHistory() {
+    this.router.navigate(["/clockHistory"]);
   }
 }

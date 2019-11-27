@@ -22,7 +22,7 @@ export function getSpanishPaginatorIntl() {
   paginatorIntl.itemsPerPageLabel = 'Fichajes por página:';
   paginatorIntl.firstPageLabel = 'Primera página';
   paginatorIntl.nextPageLabel = 'Siguiente página';
-  paginatorIntl.previousPageLabel = 'Anterior página';
+  paginatorIntl.previousPageLabel = 'Página anterior';
   paginatorIntl.lastPageLabel = 'Última página';
   paginatorIntl.getRangeLabel = spanishRangeLabel;
   

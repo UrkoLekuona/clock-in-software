@@ -8,6 +8,7 @@ import { IssueFormComponent } from './issue-form/issue-form.component';
 import { AuthGuard } from './auth-guard.guard';
 import { AdminHomeComponent } from './admin-home/admin-home.component';
 import { AdminGuard } from "./admin-guard.guard";
+import { ClockHistoryComponent } from './clock-history/clock-history.component';
 
 const routes: Routes = [
   {
@@ -38,6 +39,11 @@ const routes: Routes = [
     path: "adminHome",
     canActivate: [AuthGuard, AdminGuard],
     component: AdminHomeComponent
+  },
+  {
+    path: "clockHistory",
+    canActivate: [AuthGuard],
+    component: ClockHistoryComponent
   },
   { path: "**", redirectTo: "login", pathMatch: "full" }
 ];
