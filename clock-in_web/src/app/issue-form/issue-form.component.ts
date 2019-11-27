@@ -11,6 +11,7 @@ import Swal from "sweetalert2";
 import { NetworkService } from "../network.service";
 import { UserService } from "../user.service";
 import { DateHourValidator } from "../dateHourValidator";
+import { ErrorService } from "../error.service";
 
 @Component({
   selector: "app-issue-form",
@@ -32,7 +33,8 @@ export class IssueFormComponent implements OnInit {
     private formBuilder: FormBuilder,
     private network: NetworkService,
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private errorService: ErrorService
   ) {}
 
   ngOnInit() {
@@ -64,43 +66,20 @@ export class IssueFormComponent implements OnInit {
             this.waiting = false;
           });
       },
-      err => {
-        console.log(err);
-        switch (err.status) {
-          case 400:
-            this.alert.fire({
-              title: "Error",
-              text:
-                "El texto tiene que tener entre 0 y 2550 caracteres y la fecha tiene que ser DD/MM/YYYY.",
-              type: "error"
-            });
-            break;
-          case 401:
-            this.alert
-              .fire({
-                title: "Error",
-                text: "Acceso denegado. La sesión ha expirado.",
-                type: "error"
-              })
-              .then(res => {
-                this.userService.logout();
-                this.router.navigate(["/login"]);
-              });
-            break;
-          case 500:
-            this.alert.fire({
-              title: "Error",
-              text: "Fallo del servidor. Contacte con un administrador",
-              type: "error"
-            });
-            break;
-          default:
-            this.alert.fire({
-              title: "Error",
-              text: "Fallo desconocido. Contacte con un administrador",
-              type: "error"
-            });
-        }
+      error => {
+        console.log(error);
+        this.errorService
+          .error(error, {
+            400: "El texto tiene que tener entre 0 y 2550 caracteres y la fecha tiene que ser DD/MM/YYYY.",
+            401: "Acceso denegado. La sesión ha expirado.",
+            500: "Fallo del servidor. Contacte con un administrador."
+          })
+          .then(res => {
+            if (error.status == 401) {
+              this.userService.logout();
+              this.router.navigate(["/login"]);
+            }
+          });
         this.waiting = false;
       }
     );

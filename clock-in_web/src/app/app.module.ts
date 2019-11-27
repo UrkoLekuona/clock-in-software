@@ -41,9 +41,10 @@ import { AdminHomeComponent } from './admin-home/admin-home.component';
 import { MyDateAdapter } from "./my-date-adapter";
 import { getSpanishPaginatorIntl } from './spanish-paginator-intl';
 import { IssueDialogComponent } from "./issue-dialog/issue-dialog.component";
+import { ClockHistoryComponent } from './clock-history/clock-history.component';
 
 @NgModule({
-  declarations: [AppComponent, LoginComponent, HomeComponent, IssueComponent, IssueDialogComponent, IssueFormComponent, AdminHomeComponent],
+  declarations: [AppComponent, LoginComponent, HomeComponent, IssueComponent, IssueDialogComponent, IssueFormComponent, AdminHomeComponent, ClockHistoryComponent],
   imports: [
     BrowserModule,
     MatButtonModule,

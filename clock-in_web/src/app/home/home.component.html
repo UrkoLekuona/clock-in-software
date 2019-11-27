@@ -30,6 +30,13 @@
             </button>
             <br />
           </div>
+          <div *ngIf="!admin">
+              <br />
+              <button mat-raised-button class="login-button" (click)="clockHistory()">
+                Historial de fichajes
+              </button>
+              <br />
+            </div>
           <br />
           <button mat-raised-button class="login-button" (click)="logout()">
             Desconectar

@@ -11,6 +11,7 @@ import Swal from "sweetalert2";
 import { DateHourValidator } from "../dateHourValidator";
 import { NetworkService } from "../network.service";
 import { UserService } from "../user.service";
+import { ErrorService } from "../error.service";
 
 @Component({
   selector: "app-issue",
@@ -33,7 +34,8 @@ export class IssueComponent implements OnInit {
     private formBuilder: FormBuilder,
     private network: NetworkService,
     private router: Router,
-    private userService: UserService
+    private userService: UserService,
+    private errorService: ErrorService
   ) {}
 
   ngOnInit() {
@@ -64,33 +66,17 @@ export class IssueComponent implements OnInit {
         this.router.navigate(["/home"]);
       },
       error => {
-        switch (error.status) {
-          case 401:
-            this.alert
-              .fire({
-                title: "Error",
-                text: "Acceso denegado. La sesión ha expirado.",
-                type: "error"
-              })
-              .then(res => {
-                this.userService.logout();
-                this.router.navigate(["/login"]);
-              });
-            break;
-          case 500:
-            this.alert.fire({
-              title: "Error",
-              text: "Fallo del servidor. Contacte con un administrador.",
-              type: "error"
-            });
-            break;
-          default:
-            this.alert.fire({
-              title: "Error",
-              text: "Fallo desconocido. Contacte con un administrador.",
-              type: "error"
-            });
-        }
+        this.errorService
+        .error(error, {
+          401: "Acceso denegado. La sesión ha expirado.",
+          500: "Fallo del servidor. Contacte con un administrador."
+        })
+        .then(res => {
+          if (error.status == 401) {
+            this.userService.logout();
+            this.router.navigate(["/login"]);
+          }
+        });
       }
     );
   }

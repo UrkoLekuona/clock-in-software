@@ -3,7 +3,7 @@ var express      = require('express'),
     passport     = require('passport'),
     bodyParser   = require('body-parser'),
     cookieParser = require('cookie-parser'),
-    jwt 	 = require('jsonwebtoken'),
+    jwt          = require('jsonwebtoken'),
     fs           = require('file-system'),
     mariadb      = require('mariadb'),
     pass_file    = require('./password.key.json'),
@@ -79,12 +79,12 @@ function error(err, type, status, ip, res) {
 
 // Authentication middleware
 app.use(expressJwt({
-    secret: rsa_public_key
+  secret: rsa_public_key
 })); 
 
 app.use(function(err, req, res, next) {
   if(err.name === 'UnauthorizedError' && req.path != '/login') {
-    error('Invalid token', 'Invalid token', 401, '', res);
+    error('Invalid token', 'Invalid token', 401, req.ip, res);
   } else {
     next();
   }
@@ -114,19 +114,19 @@ app.post('/login', passport.authenticate('ldapauth', {session: false}), (req, re
         conn.query("SELECT inDate, outDate FROM clock WHERE user=? and inDate=(SELECT MAX(inDate) FROM clock WHERE user=?)", [req.body.username, req.body.username]).then(rows => {
           if (rows[0] === undefined || rows[0].inDate == null) {
             date = 'none';
-	    type = 'none';
+            type = 'none';
           } else if (rows[0].outDate == null) {
-	    date = new Date(rows[0].inDate);
-	    type = 'in';
-	  } else {
-	    date = new Date(rows[0].outDate);
-	    type = 'out';
-	  }
-	  let admin = false;
-	  if (req.user.employeeType && req.user.employeeType === 'fichajeAdmin') {
+            date = new Date(rows[0].inDate);
+            type = 'in';
+          } else {
+            date = new Date(rows[0].outDate);
+            type = 'out';
+          }
+          let admin = false;
+          if (req.user.employeeType && req.user.employeeType === 'fichajeAdmin') {
             admin = true;
-	  }
-	  var token = jwt.sign({ user: req.body.username, admin: admin }, privateKey, { algorithm: 'RS256', expiresIn: '1h' });
+          }
+          var token = jwt.sign({ user: req.body.username, admin: admin }, privateKey, { algorithm: 'RS256', expiresIn: '11h' });
           res.send({ status: 'logged', date: date, type: type, token: token });      
           conn.end();
         });
@@ -142,13 +142,13 @@ app.post('/login', passport.authenticate('ldapauth', {session: false}), (req, re
 app.post('/clock', function(req, res, next) {
   var type = req.body.type;
   var ip = req.ip;
-  //var ip = req.connection.remoteAddress;
   if (type !== undefined && (type === 'in' || type === 'out')) {
     if (type === 'in') {
       mariadb.createConnection(db_opts).then(conn => {
         conn.query("SELECT outDate, inDate FROM clock WHERE user=? AND inDate=(SELECT MAX(inDate) FROM clock WHERE user=?)", [req.user.user, req.user.user]).then(maxIn => {
           if (maxIn[0] === undefined || ((maxIn[0].inDate == null && maxIn[0].outDate == null) || (maxIn[0].inDate != null && maxIn[0].outDate != null))) {
-	    conn.query("INSERT INTO clock(user, inDate, inip) VALUES(?, NOW(), ?)", [req.user.user, ip]).then(dbres => {
+            // maxIn[0].inDate is before NOW()
+            conn.query("INSERT INTO clock(user, inDate, inip) VALUES(?, NOW(), ?)", [req.user.user, ip]).then(dbres => {
               res.send({ status: 'ok' });          
               conn.end();
             })
@@ -161,8 +161,8 @@ app.post('/clock', function(req, res, next) {
             error('Bad request: unknown error', 'Clock in', 400, ip, res);
           }
         })
-	.catch(err => {
-	  error(err, 'DB connection error', 500, ip, res);
+        .catch(err => {
+          error(err, 'DB connection error', 500, ip, res);
         });
       })
       .catch(err => {
@@ -172,7 +172,7 @@ app.post('/clock', function(req, res, next) {
       mariadb.createConnection(db_opts).then(conn => {
         conn.query("SELECT outDate, inDate, id FROM clock WHERE user=? AND inDate=(SELECT MAX(inDate) FROM clock WHERE user=?)", [req.user.user, req.user.user]).then(maxIn => {
           if (maxIn[0] !== undefined && maxIn[0].inDate != null && maxIn[0].outDate == null) {
-	    conn.query("UPDATE clock SET outDate=NOW(), outip=? WHERE id=?", [ip, maxIn[0].id]).then(dbres => {
+            conn.query("UPDATE clock SET outDate=NOW(), outip=? WHERE id=?", [ip, maxIn[0].id]).then(dbres => {
               res.send({ status: 'ok' });          
               conn.end(); 
             })
@@ -185,8 +185,8 @@ app.post('/clock', function(req, res, next) {
             error('Bad request: unknown error', 'Clock out', 400, ip, res);
           } 
         })
-	.catch(err => {
-	  error(err, 'DB connection error', 500, ip, res);
+        .catch(err => {
+          error(err, 'DB connection error', 500, ip, res);
         });
       })
       .catch(err => {
@@ -205,8 +205,9 @@ app.post('/lastclock', function(req, res, next) {
     if (type === 'in') {
       mariadb.createConnection(db_opts).then(conn => {
         conn.query("SELECT id, inDate, outDate FROM clock WHERE user=? AND inDate=(SELECT MAX(inDate) FROM clock WHERE user=?)", [req.user.user, req.user.user]).then(maxIn => {
+          conn.end();
           if (maxIn[0] !== undefined && maxIn[0].inDate != null && maxIn[0].outDate == null) {
-	    res.send({ id: maxIn[0].id, in: maxIn[0].inDate });
+            res.send({ id: maxIn[0].id, in: maxIn[0].inDate });
           } else {
             error('Bad request: Last clock-in is right for user ' + req.user.user, 'LastClock', 400, req.ip, res);
           }
@@ -219,8 +220,8 @@ app.post('/lastclock', function(req, res, next) {
       mariadb.createConnection(db_opts).then(conn => {
         conn.query("SELECT id, inDate, outDate FROM clock WHERE user=? AND outDate=(SELECT MAX(outDate) FROM clock WHERE user=?)", [req.user.user, req.user.user]).then(maxOut => {
           conn.end();
-	  if (maxOut[0] !== undefined && maxOut[0].outDate != null && maxOut[0].inDate != null) {
-	    res.send({ id: maxOut[0].id, out: maxOut[0].outDate });
+          if (maxOut[0] !== undefined && maxOut[0].outDate != null && maxOut[0].inDate != null) {
+            res.send({ id: maxOut[0].id, out: maxOut[0].outDate });
           } else if (maxOut[0] !== undefined && maxOut[0].outDate != null && maxOut[0].inDate == null) {
             error('DB error: Last clock is corrupted', 'LastClock', 500, req.ip, res);
           } else {
@@ -238,7 +239,7 @@ app.post('/lastclock', function(req, res, next) {
 });
 
 // A request is attempting to write an issue
-app.post('/issue', function(req, res, next) {
+app.post('/issue', isAdmin, function(req, res, next) {
   var date = moment(req.body.date, 'DD/MM/YYYY', true);
   var nInDate = moment(req.body.nInDate, 'DD/MM/YYYY HH:mm', true);
   var nOutDate = moment(req.body.nOutDate, 'DD/MM/YYYY HH:mm', true);
@@ -309,7 +310,7 @@ app.get('/allusers', isAdmin, function(req, res, next) {
         res.send({  status: 'ok', users: dbres });
         conn.end();
       } else {
-	error('Error getting all users', 'AllUsers', 500, req.ip, res);
+        error('Error getting all users', 'AllUsers', 500, req.ip, res);
       }
     })
     .catch(err => {
@@ -318,18 +319,24 @@ app.get('/allusers', isAdmin, function(req, res, next) {
   });
 }); 
 
-app.post('/clocksBetweenDates', isAdmin, function(req, res, next) {
+app.post('/clocksBetweenDates', function(req, res, next) {
   let minDate = moment(req.body.minDate, 'DD/MM/YYYY', true);
   let maxDate = moment(req.body.maxDate, 'DD/MM/YYYY', true);
-  if (req.body.user && minDate.isValid() && maxDate.isValid() && minDate.isSameOrBefore(maxDate)) {
+  let user = req.user.user;
+  let query = "SELECT id, inDate, outDate FROM clock WHERE user=? AND inDate>=? AND outDate<=?";
+  if (req.user.admin) {
+    user = req.body.user;
+    query = "SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND outDate<=?";
+  }
+  if (user && minDate.isValid() && maxDate.isValid() && minDate.isSameOrBefore(maxDate)) {
     mariadb.createConnection(db_opts).then(conn => {
-      conn.query("SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND outDate<=?", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((clockres) => {
+      conn.query(query, [user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((clockres) => {
         if (clockres != undefined) {
           clockres.forEach(row => {
             row['inDate'] = moment(row.inDate).format('DD/MM/YYYY HH:mm:ss');
             row['outDate'] = moment(row.outDate).format('DD/MM/YYYY HH:mm:ss');
-	  });
-          conn.query("SELECT id, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate FROM issue WHERE user=? AND rInDate>=? AND rOutDate<=?", [req.body.user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((issueres) => {
+          });
+          conn.query("SELECT id, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate FROM issue WHERE user=? AND rInDate>=? AND rOutDate<=?", [user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((issueres) => {
             if (issueres != undefined) {
               issueres.forEach(row => {
                 row['date'] = moment(row.date).format('DD/MM/YYYY');
@@ -355,9 +362,24 @@ app.post('/clocksBetweenDates', isAdmin, function(req, res, next) {
         error(err, 'DB connection error', 500, req.ip, res);
       });
     });
-    //res.send({ status: 'ok', clocks: []});
   } else {
     error('Bad request: Invalid dates', 'ClocksBetweenDates', 400, req.ip, res);
+  }
+});
+
+app.post('/deleteIssue', isAdmin, function(req, res, next) {
+  if (!req.body.id || typeof parseInt(req.body.id) !== 'number' || (req.body.id%1) !== 0) {
+    error('Bad request: Invalid id', 'deleteIssue', 400, req.ip, res);
+  } else {
+    mariadb.createConnection(db_opts).then(conn => {
+      conn.query("DELETE FROM issue WHERE id=?", parseInt(req.body.id)).then((dbres) => {
+        conn.end();
+        res.send({ status: 'ok' });
+      })
+      .catch(err => {
+        error(err, 'DB connection error', 500, req.ip, res);
+      });
+    });
   }
 });
 

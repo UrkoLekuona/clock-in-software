@@ -7,9 +7,7 @@ import {
 } from "@angular/forms";
 import {
   MatTableDataSource,
-  MatPaginator,
-  MatDialog,
-  MatDialogConfig
+  MatPaginator
 } from "@angular/material";
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
@@ -20,7 +18,6 @@ import { NetworkService } from "../network.service";
 import { DateHourValidator } from "../dateHourValidator";
 import { UserService } from "../user.service";
 import { Router } from "@angular/router";
-import { IssueDialogComponent } from "../issue-dialog/issue-dialog.component";
 import { ErrorService } from "../error.service";
 
 export interface Clock {
@@ -55,12 +52,11 @@ export interface User {
 }
 
 @Component({
-  selector: "app-admin-home",
-  templateUrl: "./admin-home.component.html",
-  styleUrls: ["./admin-home.component.css"]
+  selector: 'app-clock-history',
+  templateUrl: './clock-history.component.html',
+  styleUrls: ['./clock-history.component.css']
 })
-export class AdminHomeComponent implements OnInit {
-  users: User[] = [];
+export class ClockHistoryComponent implements OnInit {
   selectedUser: User = undefined;
   loading: boolean = false;
   clockDatesForm: FormGroup;
@@ -87,11 +83,8 @@ export class AdminHomeComponent implements OnInit {
   public displayedColumnsClock = [
     "id",
     "inDate",
-    "inIp",
     "outDate",
-    "outIp",
-    "todayHours",
-    "issue"
+    "todayHours"
   ];
   public dataSourceClock: MatTableDataSource<Clock>;
   public displayedColumnsIssue = [
@@ -103,8 +96,7 @@ export class AdminHomeComponent implements OnInit {
     "diffInDate",
     "rOutDate",
     "nOutDate",
-    "diffOutDate",
-    "delete"
+    "diffOutDate"
   ];
   public dataSourceIssue: MatTableDataSource<Issue>;
 
@@ -113,7 +105,6 @@ export class AdminHomeComponent implements OnInit {
     private formBuilder: FormBuilder,
     private userService: UserService,
     private router: Router,
-    private issueDialog: MatDialog,
     private errorService: ErrorService
   ) {}
 
@@ -134,41 +125,7 @@ export class AdminHomeComponent implements OnInit {
         ])
       )
     });
-    this.loading = true;
-    this.network.allUsers().subscribe(
-      data => {
-        let aux: any = data;
-        const users: User[] = aux.body.users;
-        this.users = users;
-        console.log(this.users);
-      },
-      error => {
-        console.log(error);
-        this.errorService
-          .error(error, {
-            401: "Acceso denegado. La sesión ha expirado.",
-            500: "Fallo del servidor. Contacte con un administrador."
-          })
-          .then(res => {
-            if (error.status == 401) {
-              this.userService.logout();
-              this.router.navigate(["/login"]);
-            }
-          });
-        this.loading = false;
-      },
-      () => {
-        this.loading = false;
-      }
-    );
-  }
-
-  loadUser(user) {
-    this.selectedUser = this.users.find(x => {
-      return x.username === user;
-    });
-    this.clockDatesForm.get("clock_since").setErrors({ invalid: true });
-    this.clockDatesForm.reset();
+    this.selectedUser = { username: this.userService.username};
   }
 
   clocksBetweenDates(value) {
@@ -185,7 +142,6 @@ export class AdminHomeComponent implements OnInit {
           const aux: any = data;
           this.selectedUser = {
             username: this.selectedUser.username,
-            displayName: this.selectedUser.displayName,
             clocks: aux.body.clocks,
             issues: aux.body.issues
           };
@@ -231,17 +187,17 @@ export class AdminHomeComponent implements OnInit {
         error => {
           console.log(error);
           this.errorService
-            .error(error, {
-              400: "Las fechas elegidas no son válidas.",
-              401: "Acceso denegado. La sesión ha expirado.",
-              500: "Fallo del servidor. Contacte con un administrador."
-            })
-            .then(res => {
-              if (error.status == 401) {
-                this.userService.logout();
-                this.router.navigate(["/login"]);
-              }
-            });
+          .error(error, {
+            400: "Las fechas elegidas no son válidas",
+            401: "Acceso denegado. La sesión ha expirado.",
+            500: "Fallo del servidor. Contacte con un administrador."
+          })
+          .then(res => {
+            if (error.status == 401) {
+              this.userService.logout();
+              this.router.navigate(["/login"]);
+            }
+          });
           this.loading = false;
         },
         () => {
@@ -261,7 +217,6 @@ export class AdminHomeComponent implements OnInit {
         this.clockTable.nativeElement,
         { raw: true }
       );
-      this.delete_col(ws, this.displayedColumnsClock.length - 1);
       const wb: XLSX.WorkBook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Fichajes");
       if (this.issueTable) {
@@ -269,7 +224,6 @@ export class AdminHomeComponent implements OnInit {
           this.issueTable.nativeElement,
           { raw: true }
         );
-        this.delete_col(ws2, this.displayedColumnsIssue.length - 1);
         XLSX.utils.book_append_sheet(wb, ws2, "Incidencias");
       }
       let iD = moment(this.clockDatesForm.get("clock_since").value).format(
@@ -281,8 +235,6 @@ export class AdminHomeComponent implements OnInit {
       XLSX.writeFile(
         wb,
         "Fichajes_" +
-          this.selectedUser.displayName.replace(/\s/g, "") +
-          "_" +
           iD +
           "_" +
           oD +
@@ -317,81 +269,5 @@ export class AdminHomeComponent implements OnInit {
     } else {
       this.dailyArray[day] = d2.diff(d1, "minutes");
     }
-  }
-
-  ec(r, c) {
-    return XLSX.utils.encode_cell({ r: r, c: c });
-  }
-
-  delete_col(ws, col_index) {
-    var variable = XLSX.utils.decode_range(ws["!ref"]);
-    for (var R = variable.s.r; R < variable.e.r; ++R) {
-      for (var C = col_index; C <= variable.e.c; ++C) {
-        ws[this.ec(R, C)] = ws[this.ec(R, C + 1)];
-      }
-    }
-    variable.e.c--;
-    ws["!ref"] = XLSX.utils.encode_range(variable.s, variable.e);
-  }
-
-  openIssue(clock) {
-    const dialogConfig = new MatDialogConfig();
-
-    dialogConfig.disableClose = true;
-    dialogConfig.autoFocus = true;
-
-    dialogConfig.data = clock;
-
-    const dialogRef = this.issueDialog.open(IssueDialogComponent, dialogConfig);
-
-    dialogRef.afterClosed().subscribe(data => {
-      console.log(data);
-      if (data === "ok") {
-        this.clocksBetweenDates(this.clockDatesForm.value);
-      }
-    });
-  }
-
-  delete(issue) {
-    this.alert
-      .fire({
-        title: "¿Borrar incidencia?",
-        text: "Si la borras, no se podrá recuperar. ¿Deseas seguir adelante?",
-        type: "question",
-        showCancelButton: true,
-        cancelButtonText: "Cancelar"
-      })
-      .then(res => {
-        if (res.value) {
-          this.network.delete(issue.id).subscribe(
-            data => {
-              this.clocksBetweenDates(this.clockDatesForm.value);
-              Swal.fire({
-                title: "Incidencia eliminada correctamente",
-                type: "success",
-                toast: true,
-                position: "bottom",
-                showConfirmButton: false,
-                timer: 3000
-              });
-            },
-            error => {
-              console.log(error);
-              this.errorService
-                .error(error, {
-                  400: "El identificador de la incidencia no es válido.",
-                  401: "Acceso denegado. La sesión ha expirado.",
-                  500: "Fallo del servidor. Contacte con un administrador."
-                })
-                .then(res => {
-                  if (error.status == 401) {
-                    this.userService.logout();
-                    this.router.navigate(["/login"]);
-                  }
-                });
-            }
-          );
-        }
-      });
   }
 }
