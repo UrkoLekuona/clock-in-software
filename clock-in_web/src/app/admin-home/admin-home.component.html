@@ -364,7 +364,16 @@
                 }}</strong></mat-footer-cell
               >
             </ng-container>
-
+            <ng-container matColumnDef="delete">
+              <mat-header-cell *matHeaderCellDef
+                >Borrar incidencia</mat-header-cell
+              >
+              <mat-cell *matCellDef="let issue"
+                ><button mat-icon-button (click)="delete(issue)">
+                  <mat-icon class="mat-18">delete</mat-icon>
+                </button></mat-cell
+              ><mat-footer-cell *matFooterCellDef></mat-footer-cell>
+            </ng-container>
             <tr
               mat-header-row
               *matHeaderRowDef="displayedColumnsIssue; sticky: true"
@@ -488,7 +497,16 @@
               }}</strong></mat-footer-cell
             >
           </ng-container>
-
+          <ng-container matColumnDef="delete">
+            <mat-header-cell *matHeaderCellDef
+              >Borrar incidencia</mat-header-cell
+            >
+            <mat-cell *matCellDef="let issue"
+              ><button mat-icon-button (click)="delete(issue)">
+                <mat-icon class="mat-18">delete</mat-icon>
+              </button></mat-cell
+            ><mat-footer-cell *matFooterCellDef></mat-footer-cell>
+          </ng-container>
           <mat-header-row
             *matHeaderRowDef="displayedColumnsIssue; sticky: true"
           ></mat-header-row>

@@ -239,7 +239,7 @@ app.post('/lastclock', function(req, res, next) {
 });
 
 // A request is attempting to write an issue
-app.post('/issue', function(req, res, next) {
+app.post('/issue', isAdmin, function(req, res, next) {
   var date = moment(req.body.date, 'DD/MM/YYYY', true);
   var nInDate = moment(req.body.nInDate, 'DD/MM/YYYY HH:mm', true);
   var nOutDate = moment(req.body.nOutDate, 'DD/MM/YYYY HH:mm', true);
@@ -364,6 +364,22 @@ app.post('/clocksBetweenDates', function(req, res, next) {
     });
   } else {
     error('Bad request: Invalid dates', 'ClocksBetweenDates', 400, req.ip, res);
+  }
+});
+
+app.post('/deleteIssue', isAdmin, function(req, res, next) {
+  if (!req.body.id || typeof parseInt(req.body.id) !== 'number' || (req.body.id%1) !== 0) {
+    error('Bad request: Invalid id', 'deleteIssue', 400, req.ip, res);
+  } else {
+    mariadb.createConnection(db_opts).then(conn => {
+      conn.query("DELETE FROM issue WHERE id=?", parseInt(req.body.id)).then((dbres) => {
+        conn.end();
+        res.send({ status: 'ok' });
+      })
+      .catch(err => {
+        error(err, 'DB connection error', 500, req.ip, res);
+      });
+    });
   }
 });
 

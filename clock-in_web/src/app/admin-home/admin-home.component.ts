@@ -103,7 +103,8 @@ export class AdminHomeComponent implements OnInit {
     "diffInDate",
     "rOutDate",
     "nOutDate",
-    "diffOutDate"
+    "diffOutDate",
+    "delete"
   ];
   public dataSourceIssue: MatTableDataSource<Issue>;
 
@@ -144,16 +145,16 @@ export class AdminHomeComponent implements OnInit {
       error => {
         console.log(error);
         this.errorService
-        .error(error, {
-          401: "Acceso denegado. La sesión ha expirado.",
-          500: "Fallo del servidor. Contacte con un administrador."
-        })
-        .then(res => {
-          if (error.status == 401) {
-            this.userService.logout();
-            this.router.navigate(["/login"]);
-          }
-        });
+          .error(error, {
+            401: "Acceso denegado. La sesión ha expirado.",
+            500: "Fallo del servidor. Contacte con un administrador."
+          })
+          .then(res => {
+            if (error.status == 401) {
+              this.userService.logout();
+              this.router.navigate(["/login"]);
+            }
+          });
         this.loading = false;
       },
       () => {
@@ -230,17 +231,17 @@ export class AdminHomeComponent implements OnInit {
         error => {
           console.log(error);
           this.errorService
-          .error(error, {
-            400: "Las fechas elegidas no son válidas.",
-            401: "Acceso denegado. La sesión ha expirado.",
-            500: "Fallo del servidor. Contacte con un administrador."
-          })
-          .then(res => {
-            if (error.status == 401) {
-              this.userService.logout();
-              this.router.navigate(["/login"]);
-            }
-          });
+            .error(error, {
+              400: "Las fechas elegidas no son válidas.",
+              401: "Acceso denegado. La sesión ha expirado.",
+              500: "Fallo del servidor. Contacte con un administrador."
+            })
+            .then(res => {
+              if (error.status == 401) {
+                this.userService.logout();
+                this.router.navigate(["/login"]);
+              }
+            });
           this.loading = false;
         },
         () => {
@@ -268,6 +269,7 @@ export class AdminHomeComponent implements OnInit {
           this.issueTable.nativeElement,
           { raw: true }
         );
+        this.delete_col(ws2, this.displayedColumnsIssue.length - 1);
         XLSX.utils.book_append_sheet(wb, ws2, "Incidencias");
       }
       let iD = moment(this.clockDatesForm.get("clock_since").value).format(
@@ -333,7 +335,6 @@ export class AdminHomeComponent implements OnInit {
   }
 
   openIssue(clock) {
-    console.log("Opening dialog...");
     const dialogConfig = new MatDialogConfig();
 
     dialogConfig.disableClose = true;
@@ -343,12 +344,53 @@ export class AdminHomeComponent implements OnInit {
 
     const dialogRef = this.issueDialog.open(IssueDialogComponent, dialogConfig);
 
-    dialogRef
-      .afterClosed()
-      .subscribe(data => {
-        console.log(data);
-        if (data === 'ok') {
-          this.clocksBetweenDates(this.clockDatesForm.value);
+    dialogRef.afterClosed().subscribe(data => {
+      console.log(data);
+      if (data === "ok") {
+        this.clocksBetweenDates(this.clockDatesForm.value);
+      }
+    });
+  }
+
+  delete(issue) {
+    this.alert
+      .fire({
+        title: "¿Borrar incidencia?",
+        text: "Si la borras, no se podrá recuperar. ¿Deseas seguir adelante?",
+        type: "question",
+        showCancelButton: true,
+        cancelButtonText: "Cancelar"
+      })
+      .then(res => {
+        if (res.value) {
+          this.network.delete(issue.id).subscribe(
+            data => {
+              this.clocksBetweenDates(this.clockDatesForm.value);
+              Swal.fire({
+                title: "Incidencia eliminada correctamente",
+                type: "success",
+                toast: true,
+                position: "bottom",
+                showConfirmButton: false,
+                timer: 3000
+              });
+            },
+            error => {
+              console.log(error);
+              this.errorService
+                .error(error, {
+                  400: "El identificador de la incidencia no es válido.",
+                  401: "Acceso denegado. La sesión ha expirado.",
+                  500: "Fallo del servidor. Contacte con un administrador."
+                })
+                .then(res => {
+                  if (error.status == 401) {
+                    this.userService.logout();
+                    this.router.navigate(["/login"]);
+                  }
+                });
+            }
+          );
         }
       });
   }

@@ -79,4 +79,12 @@ export class NetworkService {
     options.observe = 'response' as "body";
     return this.http.post(this.protocol + this.webserver + this.api + '/clocksBetweenDates', body.toString(), options);
   }
+
+  delete(value) {
+    let body = new URLSearchParams();
+    body.set('id', value);
+    let options = this.httpOptions;
+    options.observe = 'response' as "body";
+    return this.http.post(this.protocol + this.webserver + this.api + '/deleteIssue', body.toString(), options);
+  }
 }
