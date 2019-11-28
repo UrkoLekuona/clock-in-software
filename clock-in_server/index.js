@@ -240,9 +240,16 @@ app.post('/lastclock', function(req, res, next) {
 
 // A request is attempting to write an issue
 app.post('/issue', isAdmin, function(req, res, next) {
-  var date = moment(req.body.date, 'DD/MM/YYYY', true);
-  var nInDate = moment(req.body.nInDate, 'DD/MM/YYYY HH:mm', true);
-  var nOutDate = moment(req.body.nOutDate, 'DD/MM/YYYY HH:mm', true);
+  let date;
+  let nInDate;
+  let nOutDate;
+  try {
+    date = moment(req.body.date, 'DD/MM/YYYY', true);
+    nInDate = moment(req.body.nInDate, 'DD/MM/YYYY HH:mm', true);
+    nOutDate = moment(req.body.nOutDate, 'DD/MM/YYYY HH:mm', true);
+  } catch {
+    error('Bad request: Invalid dates', 'Issue', 400, req.ip, res);
+  }
   if (req.body.id !== undefined && req.body.text !== undefined && req.body.text.length < 2550 && date.isValid() && nInDate.isValid() && nOutDate.isValid()) {
     mariadb.createConnection(db_opts).then(conn => {
       var formatIn = nInDate.format('YYYY-MM-DD HH:mm');
@@ -266,7 +273,12 @@ app.post('/issue', isAdmin, function(req, res, next) {
 // A request wants to inform about an issue
 app.post('/issueform', function(req, res, next) {
   var issue = req.body.issue;
-  var date = moment(req.body.date, 'DD/MM/YYYY', true);
+  let date;
+  try {
+    date = moment(req.body.date, 'DD/MM/YYYY', true);
+  } catch {
+    error('Bad request: Invalid date', 'Issue', 400, req.ip, res);    
+  }
   if (issue !== undefined && issue.length < 2550 && date.isValid()) {
     var ldapsearch = 'ldapsearch -LLL -H \'' + OPTS.server.url + '\' -x -D \'' + OPTS.server.bindDN + '\' -w \'' + pass_file.ldap + '\' -b \'' + OPTS.server.searchBase + '\' "(uid=' + req.user.user + ')" | grep displayName: | cut -d\':\' -f2';
     exec(ldapsearch, (err, stdout, stderr) => {
@@ -320,8 +332,14 @@ app.get('/allusers', isAdmin, function(req, res, next) {
 }); 
 
 app.post('/clocksBetweenDates', function(req, res, next) {
-  let minDate = moment(req.body.minDate, 'DD/MM/YYYY', true);
-  let maxDate = moment(req.body.maxDate, 'DD/MM/YYYY', true);
+  let minDate;
+  let maxDate;
+  try{
+    minDate = moment(req.body.minDate, 'DD/MM/YYYY', true);
+    maxDate = moment(req.body.maxDate, 'DD/MM/YYYY', true);
+  } catch {
+    error('Bad request: Invalid dates', 'ClocksBetweenDates', 400, req.ip, res);
+  }
   let user = req.user.user;
   let query = "SELECT id, inDate, outDate FROM clock WHERE user=? AND inDate>=? AND outDate<=?";
   if (req.user.admin) {
