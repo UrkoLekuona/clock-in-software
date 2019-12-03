@@ -344,7 +344,7 @@ app.post('/clocksBetweenDates', function(req, res, next) {
   let query = "SELECT id, inDate, outDate FROM clock WHERE user=? AND inDate>=? AND inDate<=?";
   if (req.user.admin) {
     user = req.body.user;
-    query = "SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND inDate<=?";
+    query = "SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND inDate<=? AND outDate IS NOT NULL";
   }
   if (user && minDate.isValid() && maxDate.isValid() && minDate.isSameOrBefore(maxDate)) {
     mariadb.createConnection(db_opts).then(conn => {
