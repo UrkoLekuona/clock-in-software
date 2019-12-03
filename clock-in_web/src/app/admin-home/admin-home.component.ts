@@ -8,6 +8,7 @@ import {
 import {
   MatTableDataSource,
   MatPaginator,
+  MatSort,
   MatDialog,
   MatDialogConfig
 } from "@angular/material";
@@ -21,6 +22,7 @@ import { DateHourValidator } from "../dateHourValidator";
 import { UserService } from "../user.service";
 import { Router } from "@angular/router";
 import { IssueDialogComponent } from "../issue-dialog/issue-dialog.component";
+import { AdminClockDialogComponent } from "../admin-clock-dialog/admin-clock-dialog.component";
 import { ErrorService } from "../error.service";
 
 export interface Clock {
@@ -72,6 +74,7 @@ export class AdminHomeComponent implements OnInit {
     allowEscapeKey: false
   });
   paginator: MatPaginator;
+  sort: MatSort;
 
   @ViewChild("exporter", { static: false }) exporter: any;
   @ViewChild("clockTable", { static: false }) clockTable: ElementRef;
@@ -82,6 +85,10 @@ export class AdminHomeComponent implements OnInit {
     this.paginator = mp;
     if (this.paginator && this.dataSourceClock)
       this.dataSourceClock.paginator = this.paginator;
+  }
+  @ViewChild(MatSort, { static: false }) set matSort(ms: MatSort) {
+    this.sort = ms;
+    if (this.sort && this.dataSourceClock) this.dataSourceClock.sort = this.sort;
   }
 
   public displayedColumnsClock = [
@@ -113,7 +120,7 @@ export class AdminHomeComponent implements OnInit {
     private formBuilder: FormBuilder,
     private userService: UserService,
     private router: Router,
-    private issueDialog: MatDialog,
+    private dialog: MatDialog,
     private errorService: ErrorService
   ) {}
 
@@ -140,7 +147,6 @@ export class AdminHomeComponent implements OnInit {
         let aux: any = data;
         const users: User[] = aux.body.users;
         this.users = users;
-        console.log(this.users);
       },
       error => {
         console.log(error);
@@ -200,9 +206,15 @@ export class AdminHomeComponent implements OnInit {
             try {
               let ip1 = new Address6(clock.inIp);
               clock.inIp = ip1.to4().address;
+            } catch {
+              clock.inIp = '0.0.0.0';
+            }
+            try {
               let ip2 = new Address6(clock.outIp);
               clock.outIp = ip2.to4().address;
-            } catch {}
+            } catch {
+              clock.outIp = '0.0.0.0';
+            }
             if (
               !clock.inDate.includes("Invalid") &&
               !clock.outDate.includes("Invalid")
@@ -297,13 +309,19 @@ export class AdminHomeComponent implements OnInit {
     }
   }
 
+  pad(num, size) {
+    var s = num+"";
+    while (s.length < size) s = "0" + s;
+    return s;
+  }
+
   timeConvert(value) {
     let num = value;
     let hours = num / 60;
     let rhours = hours >= 0 ? Math.floor(hours) : Math.ceil(hours);
     let minutes = num % 60;
     let rminutes = Math.round(minutes);
-    return rhours + " horas y " + rminutes + " minutos";
+    return this.pad(rhours, 2) + " horas y " + this.pad(rminutes, 2) + " minutos";
   }
 
   insertIntoDailyArray(clock) {
@@ -342,7 +360,7 @@ export class AdminHomeComponent implements OnInit {
 
     dialogConfig.data = clock;
 
-    const dialogRef = this.issueDialog.open(IssueDialogComponent, dialogConfig);
+    const dialogRef = this.dialog.open(IssueDialogComponent, dialogConfig);
 
     dialogRef.afterClosed().subscribe(data => {
       console.log(data);
@@ -393,5 +411,23 @@ export class AdminHomeComponent implements OnInit {
           );
         }
       });
+  }
+
+  newClock() {
+    const dialogConfig = new MatDialogConfig();
+
+    dialogConfig.disableClose = true;
+    dialogConfig.autoFocus = true;
+
+    dialogConfig.data = this.selectedUser.username;
+
+    const dialogRef = this.dialog.open(AdminClockDialogComponent, dialogConfig);
+
+    dialogRef.afterClosed().subscribe(data => {
+      console.log(data);
+      if (data === "ok") {
+        this.clocksBetweenDates(this.clockDatesForm.value);
+      }
+    });
   }
 }

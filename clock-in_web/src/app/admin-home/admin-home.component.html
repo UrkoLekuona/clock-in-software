@@ -155,19 +155,19 @@
               ></tr>
             </table>
           </div>
-          <mat-table class="clockTable" [dataSource]="dataSourceClock">
+          <mat-table class="clockTable" matSort matSortActive="inDate" [dataSource]="dataSourceClock">
             <ng-container matColumnDef="id">
-              <mat-header-cell *matHeaderCellDef>Identificador</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Identificador</mat-header-cell>
               <mat-cell *matCellDef="let clock">{{ clock.id }}</mat-cell>
               <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="inDate">
-              <mat-header-cell *matHeaderCellDef>Fecha entrada</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Fecha entrada</mat-header-cell>
               <mat-cell *matCellDef="let clock">{{ clock.inDate }}</mat-cell>
               <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="inIp">
-              <mat-header-cell *matHeaderCellDef>IP entrada</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>IP entrada</mat-header-cell>
               <mat-cell
                 *matCellDef="let clock"
                 [ngClass]="
@@ -181,12 +181,12 @@
               <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="outDate">
-              <mat-header-cell *matHeaderCellDef>Fecha salida</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Fecha salida</mat-header-cell>
               <mat-cell *matCellDef="let clock">{{ clock.outDate }}</mat-cell>
               <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="outIp">
-              <mat-header-cell *matHeaderCellDef>IP salida</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>IP salida</mat-header-cell>
               <mat-cell
                 *matCellDef="let clock"
                 [ngClass]="
@@ -200,7 +200,7 @@
               <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="todayHours">
-              <mat-header-cell *matHeaderCellDef>Horas diarias</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Horas diarias</mat-header-cell>
               <mat-cell *matCellDef="let clock">{{
                 clock.todayHours
               }}</mat-cell>
@@ -237,6 +237,9 @@
           [pageSizeOptions]="[5, 10, 20, 100, selectedUser.clocks?.length]"
           showFirstLastButtons
         ></mat-paginator>
+        <button mat-raised-button (click)="newClock()">
+          <mat-icon class="mat-18">add</mat-icon> Nuevo fichaje
+        </button>
       </mat-card-content>
     </mat-card>
     <br />

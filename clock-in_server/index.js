@@ -341,10 +341,10 @@ app.post('/clocksBetweenDates', function(req, res, next) {
     error('Bad request: Invalid dates', 'ClocksBetweenDates', 400, req.ip, res);
   }
   let user = req.user.user;
-  let query = "SELECT id, inDate, outDate FROM clock WHERE user=? AND inDate>=? AND outDate<=?";
+  let query = "SELECT id, inDate, outDate FROM clock WHERE user=? AND inDate>=? AND inDate<=?";
   if (req.user.admin) {
     user = req.body.user;
-    query = "SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND outDate<=?";
+    query = "SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND inDate<=?";
   }
   if (user && minDate.isValid() && maxDate.isValid() && minDate.isSameOrBefore(maxDate)) {
     mariadb.createConnection(db_opts).then(conn => {
@@ -354,7 +354,7 @@ app.post('/clocksBetweenDates', function(req, res, next) {
             row['inDate'] = moment(row.inDate).format('DD/MM/YYYY HH:mm:ss');
             row['outDate'] = moment(row.outDate).format('DD/MM/YYYY HH:mm:ss');
           });
-          conn.query("SELECT id, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate FROM issue WHERE user=? AND rInDate>=? AND rOutDate<=?", [user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((issueres) => {
+          conn.query("SELECT id, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate FROM issue WHERE user=? AND rInDate>=? AND rInDate<=?", [user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((issueres) => {
             if (issueres != undefined) {
               issueres.forEach(row => {
                 row['date'] = moment(row.date).format('DD/MM/YYYY');
@@ -398,6 +398,35 @@ app.post('/deleteIssue', isAdmin, function(req, res, next) {
         error(err, 'DB connection error', 500, req.ip, res);
       });
     });
+  }
+});
+
+app.post('/adminClock', isAdmin, function(req, res, next) {
+  if (!req.body.user || !req.body.text || req.body.text.length >= 2550 || !req.body.inDate || !req.body.outDate){
+    error('Bad request: Invalid parameters', 'adminClock', 400, req.ip, res);
+  } else {
+    let inDate = moment(req.body.inDate, 'DD/MM/YYYY HH:mm', true);
+    let outDate = moment(req.body.outDate, 'DD/MM/YYYY HH:mm', true);
+    if (!inDate.isValid() || !outDate.isValid()){
+      error('Bad request: Invalid dates', 'adminClock', 400, req.ip, res);
+    } else {
+      let formatIn = inDate.format('YYYY-MM-DD HH:mm');
+      let formatOut = outDate.format('YYYY-MM-DD HH:mm');
+      mariadb.createConnection(db_opts).then(conn => {
+        conn.query("INSERT INTO clock(user, inDate, outDate) VALUES(?, ?, ?)", [req.body.user, formatIn, formatOut]).then((clockres) => {
+          conn.query("INSERT INTO issue(clock_id, user, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate) SELECT c.id, c.user, ?, ?, c.inDate, ?, TIMESTAMPDIFF(minute, ?, c.inDate), c.outDate, ?, TIMESTAMPDIFF(minute, c.outDate, ?) from clock as c where id=(SELECT LAST_INSERT_ID());", [inDate.format('YYYY-MM-DD'), req.body.text, formatIn, formatIn, formatOut, formatOut]).then((issueres) => {
+            conn.end();
+            res.send({ status: 'ok' });
+          })
+          .catch(err => {
+            error(err, 'DB connection error', 500, req.ip, res);
+          });
+        })
+        .catch(err => {
+          error(err, 'DB connection error', 500, req.ip, res);
+        });
+      });
+    }
   }
 });
 

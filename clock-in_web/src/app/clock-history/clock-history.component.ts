@@ -7,7 +7,8 @@ import {
 } from "@angular/forms";
 import {
   MatTableDataSource,
-  MatPaginator
+  MatPaginator,
+  MatSort
 } from "@angular/material";
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
@@ -68,6 +69,7 @@ export class ClockHistoryComponent implements OnInit {
     allowEscapeKey: false
   });
   paginator: MatPaginator;
+  sort: MatSort;
 
   @ViewChild("exporter", { static: false }) exporter: any;
   @ViewChild("clockTable", { static: false }) clockTable: ElementRef;
@@ -78,6 +80,11 @@ export class ClockHistoryComponent implements OnInit {
     this.paginator = mp;
     if (this.paginator && this.dataSourceClock)
       this.dataSourceClock.paginator = this.paginator;
+  }
+  @ViewChild(MatSort, { static: false }) set matSort(ms: MatSort) {
+    this.sort = ms;
+    if (this.sort && this.dataSourceClock)
+      this.dataSourceClock.sort = this.sort;
   }
 
   public displayedColumnsClock = [
@@ -249,13 +256,19 @@ export class ClockHistoryComponent implements OnInit {
     }
   }
 
+  pad(num, size) {
+    var s = num+"";
+    while (s.length < size) s = "0" + s;
+    return s;
+  }
+
   timeConvert(value) {
     let num = value;
     let hours = num / 60;
     let rhours = hours >= 0 ? Math.floor(hours) : Math.ceil(hours);
     let minutes = num % 60;
     let rminutes = Math.round(minutes);
-    return rhours + " horas y " + rminutes + " minutos";
+    return this.pad(rhours, 2) + " horas y " + this.pad(rminutes, 2) + " minutos";
   }
 
   insertIntoDailyArray(clock) {
