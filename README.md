@@ -123,6 +123,7 @@ password = rootpass
   missingok
   compress
   postrotate
+        /usr/bin/find /root/dbbackup -type f -size -1024c -exec rm {} \;
         /usr/bin/find /root/dbbackup -name "*.sql" -type f -mtime +7 -exec rm {} \;
         /usr/bin/find /root/dbbackup -name "*.gz" -type f -mtime +180 -exec rm {} \;
   endscript

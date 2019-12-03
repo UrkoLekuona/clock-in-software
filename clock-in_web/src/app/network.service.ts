@@ -87,4 +87,15 @@ export class NetworkService {
     options.observe = 'response' as "body";
     return this.http.post(this.protocol + this.webserver + this.api + '/deleteIssue', body.toString(), options);
   }
+
+  adminClock(value) {
+    let body = new URLSearchParams();
+    body.set('user', value.user);
+    body.set('text', value.text);
+    body.set('inDate', value.nInDate);
+    body.set('outDate', value.nOutDate);
+    let options = this.httpOptions;
+    options.observe = 'response' as "body";
+    return this.http.post(this.protocol + this.webserver + this.api + '/adminClock', body.toString(), options);
+  }
 }

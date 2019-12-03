@@ -19,6 +19,7 @@ import {
   MatTableModule,
   MatPaginatorModule,
   MatPaginatorIntl,
+  MatSortModule,
   MatTooltipModule,
   MatProgressSpinnerModule,
   MatDividerModule,
@@ -42,9 +43,10 @@ import { MyDateAdapter } from "./my-date-adapter";
 import { getSpanishPaginatorIntl } from './spanish-paginator-intl';
 import { IssueDialogComponent } from "./issue-dialog/issue-dialog.component";
 import { ClockHistoryComponent } from './clock-history/clock-history.component';
+import { AdminClockDialogComponent } from './admin-clock-dialog/admin-clock-dialog.component';
 
 @NgModule({
-  declarations: [AppComponent, LoginComponent, HomeComponent, IssueComponent, IssueDialogComponent, IssueFormComponent, AdminHomeComponent, ClockHistoryComponent],
+  declarations: [AppComponent, LoginComponent, HomeComponent, IssueComponent, IssueDialogComponent, IssueFormComponent, AdminHomeComponent, ClockHistoryComponent, AdminClockDialogComponent],
   imports: [
     BrowserModule,
     MatButtonModule,
@@ -59,6 +61,7 @@ import { ClockHistoryComponent } from './clock-history/clock-history.component';
     MatFormFieldModule,
     MatTableModule,
     MatPaginatorModule,
+    MatSortModule,
     MatTooltipModule,
     MatSelectModule,
     MatDividerModule,
@@ -82,7 +85,7 @@ import { ClockHistoryComponent } from './clock-history/clock-history.component';
     { provide: MatPaginatorIntl, useValue: getSpanishPaginatorIntl() }
   ],
   bootstrap: [AppComponent],
-  entryComponents: [IssueDialogComponent],
+  entryComponents: [IssueDialogComponent, AdminClockDialogComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class AppModule {
