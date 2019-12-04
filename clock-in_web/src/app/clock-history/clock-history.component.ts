@@ -42,6 +42,13 @@ export interface Issue {
   diffOutDate: number;
 }
 
+export interface ManualClock {
+  id: number;
+  text: string;
+  inDate: string;
+  outDate: string;
+}
+
 export interface User {
   username: string;
   displayName?: string;
@@ -50,6 +57,9 @@ export interface User {
   issues?: Issue[];
   diffHour?: number;
   totalHourAfterDiff?: number;
+  manualClocks?: ManualClock[];
+  diffHourManual?: number;
+  totalHourAfterManual?: number;
 }
 
 @Component({
@@ -74,6 +84,7 @@ export class ClockHistoryComponent implements OnInit {
   @ViewChild("exporter", { static: false }) exporter: any;
   @ViewChild("clockTable", { static: false }) clockTable: ElementRef;
   @ViewChild("issueTable", { static: false }) issueTable: ElementRef;
+  @ViewChild("manualTable", { static: false }) manualTable: ElementRef;
   @ViewChild(MatPaginator, { static: false }) set matPaginator(
     mp: MatPaginator
   ) {
@@ -106,6 +117,8 @@ export class ClockHistoryComponent implements OnInit {
     "diffOutDate"
   ];
   public dataSourceIssue: MatTableDataSource<Issue>;
+  public displayedColumnsManual = ["id", "text", "inDate", "outDate"];
+  public dataSourceManual: MatTableDataSource<ManualClock>;
 
   constructor(
     private network: NetworkService,
@@ -150,13 +163,17 @@ export class ClockHistoryComponent implements OnInit {
           this.selectedUser = {
             username: this.selectedUser.username,
             clocks: aux.body.clocks,
-            issues: aux.body.issues
+            issues: aux.body.issues,
+            manualClocks: aux.body.manualClocks
           };
           this.dataSourceClock = new MatTableDataSource<Clock>(
             this.selectedUser.clocks
           );
           this.dataSourceIssue = new MatTableDataSource<Issue>(
             this.selectedUser.issues
+          );
+          this.dataSourceManual = new MatTableDataSource<ManualClock>(
+            this.selectedUser.manualClocks
           );
           let totalHour = 0;
           this.selectedUser.clocks.forEach(clock => {
@@ -186,9 +203,18 @@ export class ClockHistoryComponent implements OnInit {
           this.selectedUser.issues.forEach(issue => {
             diffHour += issue.diffInDate + issue.diffOutDate;
           });
+          let manualHour = 0;
+          this.selectedUser.manualClocks.forEach(manualClock => {
+            let d1 = moment(manualClock.inDate, "DD/MM/YYYY HH:mm:ss", true);
+            let d2 = moment(manualClock.outDate, "DD/MM/YYYY HH:mm:ss", true);
+            manualHour += d2.diff(d1, "minutes");
+          });
           this.selectedUser.totalHour = totalHour;
           this.selectedUser.diffHour = diffHour;
           this.selectedUser.totalHourAfterDiff = totalHour + diffHour;
+          this.selectedUser.diffHourManual = manualHour;
+          this.selectedUser.totalHourAfterManual =
+            this.selectedUser.totalHourAfterDiff + manualHour;
           this.dataSourceClock.paginator = this.paginator;
         },
         error => {
@@ -232,6 +258,13 @@ export class ClockHistoryComponent implements OnInit {
           { raw: true }
         );
         XLSX.utils.book_append_sheet(wb, ws2, "Incidencias");
+      }
+      if (this.manualTable) {
+        const ws3: XLSX.WorkSheet = XLSX.utils.table_to_sheet(
+          this.manualTable.nativeElement,
+          { raw: true }
+        );
+        XLSX.utils.book_append_sheet(wb, ws3, "Fichajes Manuales");
       }
       let iD = moment(this.clockDatesForm.get("clock_since").value).format(
         "DD-MM-YYYY"

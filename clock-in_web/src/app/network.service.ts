@@ -98,4 +98,12 @@ export class NetworkService {
     options.observe = 'response' as "body";
     return this.http.post(this.protocol + this.webserver + this.api + '/adminClock', body.toString(), options);
   }
+
+  deleteManual(value) {
+    let body = new URLSearchParams();
+    body.set('id', value);
+    let options = this.httpOptions;
+    options.observe = 'response' as "body";
+    return this.http.post(this.protocol + this.webserver + this.api + '/deleteManual', body.toString(), options);
+  }
 }

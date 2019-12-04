@@ -72,6 +72,7 @@ const log = bunyan.createLogger({
 // From here onwards, app functionality begins
 //
 
+// Error logging function
 function error(err, type, status, ip, res) {
   log.error(type + ' request from ' + ip +  ' error: {' + err + '}');
   res.status(status).send({ status: err }).end();
@@ -90,9 +91,9 @@ app.use(function(err, req, res, next) {
   }
 });
 
+// Admin middleware
 function isAdmin(req, res, next) {
   if (req.user.admin) {
-    //error(req.user.user + ' is trying to access ' + req.path + ' without being admin.', 'Not admin', 401, req.ip, res);
     next();
   } else {
     error(req.user.user + ' is trying to access ' + req.path + ' without being admin.', 'Not admin', 401, req.ip, res);
@@ -315,6 +316,7 @@ app.post('/issueform', function(req, res, next) {
   } 
 });
 
+// Get full list of users in DB
 app.get('/allusers', isAdmin, function(req, res, next) {
   mariadb.createConnection(db_opts).then(conn => {
     conn.query("SELECT username, displayName FROM users").then((dbres) => {
@@ -331,6 +333,7 @@ app.get('/allusers', isAdmin, function(req, res, next) {
   });
 }); 
 
+// Get information about clocks of a user between two dates (issues and manual clocks included)
 app.post('/clocksBetweenDates', function(req, res, next) {
   let minDate;
   let maxDate;
@@ -341,7 +344,7 @@ app.post('/clocksBetweenDates', function(req, res, next) {
     error('Bad request: Invalid dates', 'ClocksBetweenDates', 400, req.ip, res);
   }
   let user = req.user.user;
-  let query = "SELECT id, inDate, outDate FROM clock WHERE user=? AND inDate>=? AND inDate<=?";
+  let query = "SELECT id, inDate, outDate FROM clock WHERE user=? AND inDate>=? AND inDate<=? AND outDate IS NOT NULL";
   if (req.user.admin) {
     user = req.body.user;
     query = "SELECT id, inDate, inIp, outDate, outIp FROM clock WHERE user=? AND inDate>=? AND inDate<=? AND outDate IS NOT NULL";
@@ -354,7 +357,7 @@ app.post('/clocksBetweenDates', function(req, res, next) {
             row['inDate'] = moment(row.inDate).format('DD/MM/YYYY HH:mm:ss');
             row['outDate'] = moment(row.outDate).format('DD/MM/YYYY HH:mm:ss');
           });
-          conn.query("SELECT id, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate FROM issue WHERE user=? AND rInDate>=? AND rInDate<=?", [user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((issueres) => {
+          conn.query("SELECT id, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate FROM issue WHERE user=? AND date>=? AND date<=?", [user, minDate.format('YYYY-MM-DD'), maxDate.format('YYYY-MM-DD')]).then((issueres) => {
             if (issueres != undefined) {
               issueres.forEach(row => {
                 row['date'] = moment(row.date).format('DD/MM/YYYY');
@@ -363,8 +366,21 @@ app.post('/clocksBetweenDates', function(req, res, next) {
                 row['rOutDate'] = moment(row.rOutDate).format('DD/MM/YYYY HH:mm:ss');
                 row['nOutDate'] = moment(row.nOutDate).format('DD/MM/YYYY HH:mm:ss');
               });
-              res.send({ status: 'ok', clocks: clockres, issues: issueres });
-              conn.end();
+              conn.query("SELECT id, text, inDate, outDate FROM manualClock WHERE user=? AND inDate>=? AND inDate<=?", [user, minDate.format('YYYY-MM-DD'), maxDate.format('YYYY-MM-DD')]).then((manualres) => {
+                if (manualres != undefined) {
+                  manualres.forEach(row => {
+                    row['inDate'] = moment(row.inDate).format('DD/MM/YYYY HH:mm:ss');
+                    row['outDate'] = moment(row.outDate).format('DD/MM/YYYY HH:mm:ss');
+                  });
+                  res.send({ status: 'ok', clocks: clockres, issues: issueres, manualClocks: manualres });
+                  conn.end();
+                } else {
+                  error('Error getting all manual clocks', 'ClocksBetweenDates', 500, req.ip, res);
+                }
+              })
+              .catch(err3 => {
+                error(err3, 'DB connection error', 500, req.ip, res);
+              });
             } else {
               error('Error getting all issues', 'ClocksBetweenDates', 500, req.ip, res);
             }
@@ -385,6 +401,7 @@ app.post('/clocksBetweenDates', function(req, res, next) {
   }
 });
 
+// Delete an issue by id
 app.post('/deleteIssue', isAdmin, function(req, res, next) {
   if (!req.body.id || typeof parseInt(req.body.id) !== 'number' || (req.body.id%1) !== 0) {
     error('Bad request: Invalid id', 'deleteIssue', 400, req.ip, res);
@@ -401,6 +418,7 @@ app.post('/deleteIssue', isAdmin, function(req, res, next) {
   }
 });
 
+// Make a manual clock
 app.post('/adminClock', isAdmin, function(req, res, next) {
   if (!req.body.user || !req.body.text || req.body.text.length >= 2550 || !req.body.inDate || !req.body.outDate){
     error('Bad request: Invalid parameters', 'adminClock', 400, req.ip, res);
@@ -413,20 +431,32 @@ app.post('/adminClock', isAdmin, function(req, res, next) {
       let formatIn = inDate.format('YYYY-MM-DD HH:mm');
       let formatOut = outDate.format('YYYY-MM-DD HH:mm');
       mariadb.createConnection(db_opts).then(conn => {
-        conn.query("INSERT INTO clock(user, inDate, outDate) VALUES(?, ?, ?)", [req.body.user, formatIn, formatOut]).then((clockres) => {
-          conn.query("INSERT INTO issue(clock_id, user, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate) SELECT c.id, c.user, ?, ?, c.inDate, ?, TIMESTAMPDIFF(minute, ?, c.inDate), c.outDate, ?, TIMESTAMPDIFF(minute, c.outDate, ?) from clock as c where id=(SELECT LAST_INSERT_ID());", [inDate.format('YYYY-MM-DD'), req.body.text, formatIn, formatIn, formatOut, formatOut]).then((issueres) => {
-            conn.end();
-            res.send({ status: 'ok' });
-          })
-          .catch(err => {
-            error(err, 'DB connection error', 500, req.ip, res);
-          });
+        conn.query("INSERT INTO manualClock(user, text, inDate, outDate) VALUES(?, ?, ?, ?)", [req.body.user, req.body.text, formatIn, formatOut]).then((clockres) => {
+          conn.end();
+          res.send({ status: 'ok' });
         })
         .catch(err => {
           error(err, 'DB connection error', 500, req.ip, res);
         });
       });
     }
+  }
+});
+
+// Delete a manual clock by id
+app.post('/deleteManual', isAdmin, function(req, res, next) {
+  if (!req.body.id || typeof parseInt(req.body.id) !== 'number' || (req.body.id%1) !== 0) {
+    error('Bad request: Invalid id', 'deleteManual', 400, req.ip, res);
+  } else {
+    mariadb.createConnection(db_opts).then(conn => {
+      conn.query("DELETE FROM manualClock WHERE id=?", parseInt(req.body.id)).then((dbres) => {
+        conn.end();
+        res.send({ status: 'ok' });
+      })
+      .catch(err => {
+        error(err, 'DB connection error', 500, req.ip, res);
+      });
+    });
   }
 });
 
