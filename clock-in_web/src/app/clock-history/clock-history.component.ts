@@ -126,7 +126,7 @@ export class ClockHistoryComponent implements OnInit {
     private userService: UserService,
     private router: Router,
     private errorService: ErrorService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.clockDatesForm = this.formBuilder.group({
@@ -145,7 +145,7 @@ export class ClockHistoryComponent implements OnInit {
         ])
       )
     });
-    this.selectedUser = { username: this.userService.username};
+    this.selectedUser = { username: this.userService.username };
   }
 
   clocksBetweenDates(value) {
@@ -182,7 +182,7 @@ export class ClockHistoryComponent implements OnInit {
               clock.inIp = ip1.to4().address;
               let ip2 = new Address6(clock.outIp);
               clock.outIp = ip2.to4().address;
-            } catch {}
+            } catch { }
             if (
               !clock.inDate.includes("Invalid") &&
               !clock.outDate.includes("Invalid")
@@ -220,17 +220,17 @@ export class ClockHistoryComponent implements OnInit {
         error => {
           console.log(error);
           this.errorService
-          .error(error, {
-            400: "Las fechas elegidas no son válidas",
-            401: "Acceso denegado. La sesión ha expirado.",
-            500: "Fallo del servidor. Contacte con un administrador."
-          })
-          .then(res => {
-            if (error.status == 401) {
-              this.userService.logout();
-              this.router.navigate(["/login"]);
-            }
-          });
+            .error(error, {
+              400: "Las fechas elegidas no son válidas",
+              401: "Acceso denegado. La sesión ha expirado.",
+              500: "Fallo del servidor. Contacte con un administrador."
+            })
+            .then(res => {
+              if (error.status == 401) {
+                this.userService.logout();
+                this.router.navigate(["/login"]);
+              }
+            });
           this.loading = false;
         },
         () => {
@@ -275,10 +275,10 @@ export class ClockHistoryComponent implements OnInit {
       XLSX.writeFile(
         wb,
         "Fichajes_" +
-          iD +
-          "_" +
-          oD +
-          ".xlsx"
+        iD +
+        "_" +
+        oD +
+        ".xlsx"
       );
     } else {
       this.alert.fire({
@@ -290,7 +290,7 @@ export class ClockHistoryComponent implements OnInit {
   }
 
   pad(num, size) {
-    var s = num+"";
+    var s = num + "";
     while (s.length < size) s = "0" + s;
     return s;
   }
