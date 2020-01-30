@@ -357,7 +357,7 @@ app.post('/clocksBetweenDates', function(req, res, next) {
             row['inDate'] = moment(row.inDate).format('DD/MM/YYYY HH:mm:ss');
             row['outDate'] = moment(row.outDate).format('DD/MM/YYYY HH:mm:ss');
           });
-          conn.query("SELECT id, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate FROM issue WHERE user=? AND date>=? AND date<=?", [user, minDate.format('YYYY-MM-DD'), maxDate.format('YYYY-MM-DD')]).then((issueres) => {
+          conn.query("SELECT id, date, text, rInDate, nInDate, diffInDate, rOutDate, nOutDate, diffOutDate FROM issue WHERE user=? AND date>=? AND date<=?", [user, minDate.format('YYYY-MM-DD'), maxDate.subtract(1, 'd').format('YYYY-MM-DD')]).then((issueres) => {
             if (issueres != undefined) {
               issueres.forEach(row => {
                 row['date'] = moment(row.date).format('DD/MM/YYYY');
@@ -366,7 +366,7 @@ app.post('/clocksBetweenDates', function(req, res, next) {
                 row['rOutDate'] = moment(row.rOutDate).format('DD/MM/YYYY HH:mm:ss');
                 row['nOutDate'] = moment(row.nOutDate).format('DD/MM/YYYY HH:mm:ss');
               });
-              conn.query("SELECT id, text, inDate, outDate FROM manualClock WHERE user=? AND inDate>=? AND inDate<=?", [user, minDate.format('YYYY-MM-DD'), maxDate.format('YYYY-MM-DD')]).then((manualres) => {
+              conn.query("SELECT id, text, inDate, outDate FROM manualClock WHERE user=? AND inDate>=? AND inDate<=?", [user, minDate.format('YYYY-MM-DD'), maxDate.add(1, 'd').format('YYYY-MM-DD')]).then((manualres) => {
                 if (manualres != undefined) {
                   manualres.forEach(row => {
                     row['inDate'] = moment(row.inDate).format('DD/MM/YYYY HH:mm:ss');
