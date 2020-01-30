@@ -42,6 +42,13 @@ export interface Issue {
   diffOutDate: number;
 }
 
+export interface ManualClock {
+  id: number;
+  text: string;
+  inDate: string;
+  outDate: string;
+}
+
 export interface User {
   username: string;
   displayName?: string;
@@ -50,6 +57,9 @@ export interface User {
   issues?: Issue[];
   diffHour?: number;
   totalHourAfterDiff?: number;
+  manualClocks?: ManualClock[];
+  diffHourManual?: number;
+  totalHourAfterManual?: number;
 }
 
 @Component({
@@ -74,6 +84,7 @@ export class ClockHistoryComponent implements OnInit {
   @ViewChild("exporter", { static: false }) exporter: any;
   @ViewChild("clockTable", { static: false }) clockTable: ElementRef;
   @ViewChild("issueTable", { static: false }) issueTable: ElementRef;
+  @ViewChild("manualTable", { static: false }) manualTable: ElementRef;
   @ViewChild(MatPaginator, { static: false }) set matPaginator(
     mp: MatPaginator
   ) {
@@ -106,6 +117,8 @@ export class ClockHistoryComponent implements OnInit {
     "diffOutDate"
   ];
   public dataSourceIssue: MatTableDataSource<Issue>;
+  public displayedColumnsManual = ["id", "text", "inDate", "outDate"];
+  public dataSourceManual: MatTableDataSource<ManualClock>;
 
   constructor(
     private network: NetworkService,
@@ -113,7 +126,7 @@ export class ClockHistoryComponent implements OnInit {
     private userService: UserService,
     private router: Router,
     private errorService: ErrorService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.clockDatesForm = this.formBuilder.group({
@@ -132,7 +145,7 @@ export class ClockHistoryComponent implements OnInit {
         ])
       )
     });
-    this.selectedUser = { username: this.userService.username};
+    this.selectedUser = { username: this.userService.username };
   }
 
   clocksBetweenDates(value) {
@@ -150,13 +163,17 @@ export class ClockHistoryComponent implements OnInit {
           this.selectedUser = {
             username: this.selectedUser.username,
             clocks: aux.body.clocks,
-            issues: aux.body.issues
+            issues: aux.body.issues,
+            manualClocks: aux.body.manualClocks
           };
           this.dataSourceClock = new MatTableDataSource<Clock>(
             this.selectedUser.clocks
           );
           this.dataSourceIssue = new MatTableDataSource<Issue>(
             this.selectedUser.issues
+          );
+          this.dataSourceManual = new MatTableDataSource<ManualClock>(
+            this.selectedUser.manualClocks
           );
           let totalHour = 0;
           this.selectedUser.clocks.forEach(clock => {
@@ -165,7 +182,7 @@ export class ClockHistoryComponent implements OnInit {
               clock.inIp = ip1.to4().address;
               let ip2 = new Address6(clock.outIp);
               clock.outIp = ip2.to4().address;
-            } catch {}
+            } catch { }
             if (
               !clock.inDate.includes("Invalid") &&
               !clock.outDate.includes("Invalid")
@@ -186,25 +203,34 @@ export class ClockHistoryComponent implements OnInit {
           this.selectedUser.issues.forEach(issue => {
             diffHour += issue.diffInDate + issue.diffOutDate;
           });
+          let manualHour = 0;
+          this.selectedUser.manualClocks.forEach(manualClock => {
+            let d1 = moment(manualClock.inDate, "DD/MM/YYYY HH:mm:ss", true);
+            let d2 = moment(manualClock.outDate, "DD/MM/YYYY HH:mm:ss", true);
+            manualHour += d2.diff(d1, "minutes");
+          });
           this.selectedUser.totalHour = totalHour;
           this.selectedUser.diffHour = diffHour;
           this.selectedUser.totalHourAfterDiff = totalHour + diffHour;
+          this.selectedUser.diffHourManual = manualHour;
+          this.selectedUser.totalHourAfterManual =
+            this.selectedUser.totalHourAfterDiff + manualHour;
           this.dataSourceClock.paginator = this.paginator;
         },
         error => {
           console.log(error);
           this.errorService
-          .error(error, {
-            400: "Las fechas elegidas no son válidas",
-            401: "Acceso denegado. La sesión ha expirado.",
-            500: "Fallo del servidor. Contacte con un administrador."
-          })
-          .then(res => {
-            if (error.status == 401) {
-              this.userService.logout();
-              this.router.navigate(["/login"]);
-            }
-          });
+            .error(error, {
+              400: "Las fechas elegidas no son válidas",
+              401: "Acceso denegado. La sesión ha expirado.",
+              500: "Fallo del servidor. Contacte con un administrador."
+            })
+            .then(res => {
+              if (error.status == 401) {
+                this.userService.logout();
+                this.router.navigate(["/login"]);
+              }
+            });
           this.loading = false;
         },
         () => {
@@ -233,6 +259,13 @@ export class ClockHistoryComponent implements OnInit {
         );
         XLSX.utils.book_append_sheet(wb, ws2, "Incidencias");
       }
+      if (this.manualTable) {
+        const ws3: XLSX.WorkSheet = XLSX.utils.table_to_sheet(
+          this.manualTable.nativeElement,
+          { raw: true }
+        );
+        XLSX.utils.book_append_sheet(wb, ws3, "Fichajes Manuales");
+      }
       let iD = moment(this.clockDatesForm.get("clock_since").value).format(
         "DD-MM-YYYY"
       );
@@ -242,10 +275,10 @@ export class ClockHistoryComponent implements OnInit {
       XLSX.writeFile(
         wb,
         "Fichajes_" +
-          iD +
-          "_" +
-          oD +
-          ".xlsx"
+        iD +
+        "_" +
+        oD +
+        ".xlsx"
       );
     } else {
       this.alert.fire({
@@ -257,7 +290,7 @@ export class ClockHistoryComponent implements OnInit {
   }
 
   pad(num, size) {
-    var s = num+"";
+    var s = num + "";
     while (s.length < size) s = "0" + s;
     return s;
   }

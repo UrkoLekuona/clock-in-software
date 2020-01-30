@@ -4,107 +4,63 @@
     <form *ngIf="selectedUser" [formGroup]="clockDatesForm">
       <mat-form-field style="margin-right: 5%;">
         <mat-label>Desde</mat-label>
-        <input
-          #clock_since_input
-          formControlName="clock_since"
-          matInput
-          [matDatepicker]="sincePicker"
-          placeholder="DD/MM/AAAA"
-          (click)="sincePicker.open()"
-          (ngModelChange)="
+        <input #clock_since_input formControlName="clock_since" matInput [matDatepicker]="sincePicker"
+          placeholder="DD/MM/AAAA" (click)="sincePicker.open()" (ngModelChange)="
             clockDatesForm.valid && clocksBetweenDates(clockDatesForm.value)
-          "
-        />
-        <mat-datepicker-toggle
-          matSuffix
-          [for]="sincePicker"
-        ></mat-datepicker-toggle>
+          " />
+        <mat-datepicker-toggle matSuffix [for]="sincePicker"></mat-datepicker-toggle>
         <mat-datepicker #sincePicker></mat-datepicker>
       </mat-form-field>
       <mat-form-field>
         <mat-label>Hasta</mat-label>
-        <input
-          #clock_until_input
-          formControlName="clock_until"
-          matInput
-          [matDatepicker]="untilPicker"
-          placeholder="DD/MM/AAAA"
-          (click)="untilPicker.open()"
-          (ngModelChange)="
+        <input #clock_until_input formControlName="clock_until" matInput [matDatepicker]="untilPicker"
+          placeholder="DD/MM/AAAA" (click)="untilPicker.open()" (ngModelChange)="
             clockDatesForm.valid && clocksBetweenDates(clockDatesForm.value)
-          "
-        />
-        <mat-datepicker-toggle
-          matSuffix
-          [for]="untilPicker"
-        ></mat-datepicker-toggle>
+          " />
+        <mat-datepicker-toggle matSuffix [for]="untilPicker"></mat-datepicker-toggle>
         <mat-datepicker #untilPicker></mat-datepicker>
       </mat-form-field>
     </form>
-    <mat-card
-      [class.mat-elevation-z24]="true"
-      *ngIf="selectedUser !== undefined"
-    >
+    <mat-card [class.mat-elevation-z24]="true" *ngIf="selectedUser !== undefined">
       <mat-card-title>Fichajes</mat-card-title>
       <mat-card-subtitle> </mat-card-subtitle>
       <mat-card-content>
-        <div
-          *ngIf="
+        <div *ngIf="
             selectedUser.clocks === undefined ||
             selectedUser.clocks?.length == 0
-          "
-        >
+          ">
           <h4>No tienes fichajes entre estas fechas</h4>
         </div>
         <div *ngIf="selectedUser.clocks?.length > 0" class="table-container">
           <div #clockTable hidden>
             <table mat-table class="clockTable" [dataSource]="dataSourceClock">
               <ng-container matColumnDef="id">
-                <mat-header-cell *matHeaderCellDef
-                  >Identificador</mat-header-cell
-                >
+                <mat-header-cell *matHeaderCellDef>Identificador</mat-header-cell>
                 <mat-cell *matCellDef="let clock">{{ clock.id }}</mat-cell>
                 <mat-footer-cell *matFooterCellDef></mat-footer-cell>
               </ng-container>
               <ng-container matColumnDef="inDate">
-                <mat-header-cell *matHeaderCellDef
-                  >Fecha entrada</mat-header-cell
-                >
+                <mat-header-cell *matHeaderCellDef>Fecha entrada</mat-header-cell>
                 <mat-cell *matCellDef="let clock">{{ clock.inDate }}</mat-cell>
                 <mat-footer-cell *matFooterCellDef></mat-footer-cell>
               </ng-container>
               <ng-container matColumnDef="outDate">
-                <mat-header-cell *matHeaderCellDef
-                  >Fecha salida</mat-header-cell
-                >
+                <mat-header-cell *matHeaderCellDef>Fecha salida</mat-header-cell>
                 <mat-cell *matCellDef="let clock">{{ clock.outDate }}</mat-cell>
-                <mat-footer-cell *matFooterCellDef
-                  ><strong>Total horas:</strong></mat-footer-cell
-                >
+                <mat-footer-cell *matFooterCellDef><strong>Total horas:</strong></mat-footer-cell>
               </ng-container>
               <ng-container matColumnDef="todayHours">
                 <mat-header-cell *matHeaderCellDef>Horas diarias</mat-header-cell>
                 <mat-cell *matCellDef="let clock">{{
                   clock.todayHours
                 }}</mat-cell>
-                <mat-footer-cell *matFooterCellDef
-                  ><strong>{{
+                <mat-footer-cell *matFooterCellDef><strong>{{
                     timeConvert(selectedUser.totalHour)
-                  }}</strong></mat-footer-cell
-                >
+                  }}</strong></mat-footer-cell>
               </ng-container>
-              <tr
-                mat-header-row
-                *matHeaderRowDef="displayedColumnsClock; sticky: true"
-              ></tr>
-              <tr
-                mat-row
-                *matRowDef="let row; columns: displayedColumnsClock"
-              ></tr>
-              <tr
-                mat-footer-row
-                *matFooterRowDef="displayedColumnsClock; sticky: true"
-              ></tr>
+              <tr mat-header-row *matHeaderRowDef="displayedColumnsClock; sticky: true"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumnsClock"></tr>
+              <tr mat-footer-row *matFooterRowDef="displayedColumnsClock; sticky: true"></tr>
             </table>
           </div>
           <mat-table class="clockTable" matSort [dataSource]="dataSourceClock">
@@ -116,57 +72,37 @@
             <ng-container matColumnDef="inDate">
               <mat-header-cell *matHeaderCellDef mat-sort-header>Fecha entrada</mat-header-cell>
               <mat-cell *matCellDef="let clock">{{ clock.inDate }}</mat-cell>
-              <mat-footer-cell *matFooterCellDef
-                ></mat-footer-cell
-              >
+              <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="outDate">
               <mat-header-cell *matHeaderCellDef mat-sort-header>Fecha salida</mat-header-cell>
               <mat-cell *matCellDef="let clock">{{ clock.outDate }}</mat-cell>
-              <mat-footer-cell *matFooterCellDef
-                ><strong>Total horas:</strong></mat-footer-cell
-              >
+              <mat-footer-cell *matFooterCellDef><strong>Total horas:</strong></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="todayHours">
               <mat-header-cell *matHeaderCellDef mat-sort-header>Horas diarias</mat-header-cell>
               <mat-cell *matCellDef="let clock">{{
                 clock.todayHours
               }}</mat-cell>
-              <mat-footer-cell *matFooterCellDef
-                ><strong>{{
+              <mat-footer-cell *matFooterCellDef><strong>{{
                   timeConvert(selectedUser.totalHour)
-                }}</strong></mat-footer-cell
-              >
+                }}</strong></mat-footer-cell>
             </ng-container>
-            <mat-header-row
-              *matHeaderRowDef="displayedColumnsClock; sticky: true"
-            ></mat-header-row>
-            <mat-row
-              *matRowDef="let row; columns: displayedColumnsClock"
-            ></mat-row>
-            <mat-footer-row
-              *matFooterRowDef="displayedColumnsClock; sticky: true"
-            ></mat-footer-row>
+            <mat-header-row *matHeaderRowDef="displayedColumnsClock; sticky: true"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumnsClock"></mat-row>
+            <mat-footer-row *matFooterRowDef="displayedColumnsClock; sticky: true"></mat-footer-row>
           </mat-table>
         </div>
-        <mat-paginator
-          *ngIf="selectedUser.clocks?.length > 0"
-          [pageSizeOptions]="[5, 10, 20, 100, selectedUser.clocks?.length]"
-          showFirstLastButtons
-        ></mat-paginator>
+        <mat-paginator *ngIf="selectedUser.clocks?.length > 0"
+          [pageSizeOptions]="[5, 10, 20, 100, selectedUser.clocks?.length]" showFirstLastButtons></mat-paginator>
       </mat-card-content>
     </mat-card>
     <br />
-    <mat-card
-      [class.mat-elevation-z24]="true"
-      *ngIf="selectedUser !== undefined"
-    >
+    <mat-card [class.mat-elevation-z24]="true" *ngIf="selectedUser !== undefined">
       <mat-card-title>Incidencias</mat-card-title>
-      <div
-        *ngIf="
+      <div *ngIf="
           selectedUser.issues === undefined || selectedUser.issues?.length == 0
-        "
-      >
+        ">
         <h4>No tienes incidencias entre estas fechas</h4>
       </div>
       <div *ngIf="selectedUser.issues?.length > 0" class="table-container">
@@ -178,122 +114,77 @@
               <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="date">
-              <mat-header-cell *matHeaderCellDef
-                >Fecha incidencia</mat-header-cell
-              >
+              <mat-header-cell *matHeaderCellDef>Fecha incidencia</mat-header-cell>
               <mat-cell *matCellDef="let issue">{{ issue.date }}</mat-cell>
-              <mat-footer-cell *matFooterCellDef
-                ><strong>Total horas fichadas:</strong></mat-footer-cell
-              >
+              <mat-footer-cell *matFooterCellDef><strong>Total horas fichadas:</strong></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="text">
-              <mat-header-cell *matHeaderCellDef
-                >Texto incidencia</mat-header-cell
-              >
+              <mat-header-cell *matHeaderCellDef>Texto incidencia</mat-header-cell>
               <mat-cell *matCellDef="let issue">
                 <div style="max-height: 100px; overflow: auto;">
                   <p>{{ issue.text }}</p>
                 </div>
               </mat-cell>
-              <mat-footer-cell *matFooterCellDef
-                ><strong>{{
+              <mat-footer-cell *matFooterCellDef><strong>{{
                   timeConvert(selectedUser.totalHour)
-                }}</strong></mat-footer-cell
-              >
+                }}</strong></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="rInDate">
-              <mat-header-cell *matHeaderCellDef
-                >Hora de entrada real</mat-header-cell
-              >
+              <mat-header-cell *matHeaderCellDef>Hora de entrada real</mat-header-cell>
               <mat-cell *matCellDef="let issue">{{ issue.rInDate }}</mat-cell>
               <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="nInDate">
-              <mat-header-cell *matHeaderCellDef
-                >Hora de entrada actualizada</mat-header-cell
-              >
+              <mat-header-cell *matHeaderCellDef>Hora de entrada actualizada</mat-header-cell>
               <mat-cell *matCellDef="let issue">{{
                 issue.nInDate === "Invalid date" ? issue.rInDate : issue.nInDate
               }}</mat-cell>
-              <mat-footer-cell *matFooterCellDef
-                ><strong>Diferencia incidencias:</strong></mat-footer-cell
-              >
+              <mat-footer-cell *matFooterCellDef><strong>Diferencia incidencias:</strong></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="diffInDate">
-              <mat-header-cell *matHeaderCellDef
-                >Diferencia entrada</mat-header-cell
-              >
-              <mat-cell
-                *matCellDef="let issue"
-                [ngClass]="
+              <mat-header-cell *matHeaderCellDef>Diferencia entrada</mat-header-cell>
+              <mat-cell *matCellDef="let issue" [ngClass]="
                   issue.diffInDate > 0
                     ? 'green'
                     : issue.diffInDate < 0
                     ? 'red'
                     : ''
-                "
-                >{{ issue.diffInDate }}</mat-cell
-              >
-              <mat-footer-cell *matFooterCellDef
-                ><strong>{{
+                ">{{ issue.diffInDate }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef><strong>{{
                   timeConvert(selectedUser.diffHour)
-                }}</strong></mat-footer-cell
-              >
+                }}</strong></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="rOutDate">
-              <mat-header-cell *matHeaderCellDef
-                >Hora de salida real</mat-header-cell
-              >
+              <mat-header-cell *matHeaderCellDef>Hora de salida real</mat-header-cell>
               <mat-cell *matCellDef="let issue">{{ issue.rOutDate }}</mat-cell>
               <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="nOutDate">
-              <mat-header-cell *matHeaderCellDef
-                >Hora de salida actualizada</mat-header-cell
-              >
+              <mat-header-cell *matHeaderCellDef>Hora de salida actualizada</mat-header-cell>
               <mat-cell *matCellDef="let issue">{{
                 issue.nOutDate === "Invalid date"
                   ? issue.rOutDate
                   : issue.nOutDate
               }}</mat-cell>
-              <mat-footer-cell *matFooterCellDef
-                ><strong>Total final:</strong></mat-footer-cell
-              >
+              <mat-footer-cell *matFooterCellDef><strong>Total final:</strong></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="diffOutDate">
-              <mat-header-cell *matHeaderCellDef
-                >Diferencia salida</mat-header-cell
-              >
-              <mat-cell
-                *matCellDef="let issue"
-                [ngClass]="
+              <mat-header-cell *matHeaderCellDef>Diferencia salida</mat-header-cell>
+              <mat-cell *matCellDef="let issue" [ngClass]="
                   issue.diffOutDate > 0
                     ? 'green'
                     : issue.diffOutDate < 0
                     ? 'red'
                     : ''
-                "
-                >{{ issue.diffOutDate }}</mat-cell
-              >
-              <mat-footer-cell *matFooterCellDef
-                ><strong>{{
+                ">{{ issue.diffOutDate }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef><strong>{{
                   timeConvert(selectedUser.totalHourAfterDiff)
-                }}</strong></mat-footer-cell
-              >
+                }}</strong></mat-footer-cell>
             </ng-container>
 
-            <tr
-              mat-header-row
-              *matHeaderRowDef="displayedColumnsIssue; sticky: true"
-            ></tr>
-            <tr
-              mat-row
-              *matRowDef="let row; columns: displayedColumnsIssue"
-            ></tr>
-            <tr
-              mat-footer-row
-              *matFooterRowDef="displayedColumnsIssue; sticky: true"
-            ></tr>
+            <tr mat-header-row *matHeaderRowDef="displayedColumnsIssue; sticky: true"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumnsIssue"></tr>
+            <tr mat-footer-row *matFooterRowDef="displayedColumnsIssue; sticky: true"></tr>
           </table>
         </div>
         <mat-table class="clockTable" [dataSource]="dataSourceIssue">
@@ -303,118 +194,151 @@
             <mat-footer-cell *matFooterCellDef></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="date">
-            <mat-header-cell *matHeaderCellDef
-              >Fecha incidencia</mat-header-cell
-            >
+            <mat-header-cell *matHeaderCellDef>Fecha incidencia</mat-header-cell>
             <mat-cell *matCellDef="let issue">{{ issue.date }}</mat-cell>
-            <mat-footer-cell *matFooterCellDef
-              ><strong>Total horas fichadas:</strong></mat-footer-cell
-            >
+            <mat-footer-cell *matFooterCellDef><strong>Total horas fichadas:</strong></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="text">
-            <mat-header-cell *matHeaderCellDef
-              >Texto incidencia</mat-header-cell
-            >
+            <mat-header-cell *matHeaderCellDef>Texto incidencia</mat-header-cell>
             <mat-cell *matCellDef="let issue">
               <div style="max-height: 100px; overflow: auto;">
                 <p>{{ issue.text }}</p>
               </div>
             </mat-cell>
-            <mat-footer-cell *matFooterCellDef
-              ><strong>{{
+            <mat-footer-cell *matFooterCellDef><strong>{{
                 timeConvert(selectedUser.totalHour)
-              }}</strong></mat-footer-cell
-            >
+              }}</strong></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="rInDate">
-            <mat-header-cell *matHeaderCellDef
-              >Hora de entrada real</mat-header-cell
-            >
+            <mat-header-cell *matHeaderCellDef>Hora de entrada real</mat-header-cell>
             <mat-cell *matCellDef="let issue">{{ issue.rInDate }}</mat-cell>
             <mat-footer-cell *matFooterCellDef></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="nInDate">
-            <mat-header-cell *matHeaderCellDef
-              >Hora de entrada actualizada</mat-header-cell
-            >
+            <mat-header-cell *matHeaderCellDef>Hora de entrada actualizada</mat-header-cell>
             <mat-cell *matCellDef="let issue">{{
               issue.nInDate === "Invalid date" ? issue.rInDate : issue.nInDate
             }}</mat-cell>
-            <mat-footer-cell *matFooterCellDef
-              ><strong>Diferencia incidencias:</strong></mat-footer-cell
-            >
+            <mat-footer-cell *matFooterCellDef><strong>Diferencia incidencias:</strong></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="diffInDate">
-            <mat-header-cell *matHeaderCellDef
-              >Diferencia entrada</mat-header-cell
-            >
-            <mat-cell
-              *matCellDef="let issue"
-              [ngClass]="
+            <mat-header-cell *matHeaderCellDef>Diferencia entrada</mat-header-cell>
+            <mat-cell *matCellDef="let issue" [ngClass]="
                 issue.diffInDate > 0
                   ? 'green'
                   : issue.diffInDate < 0
                   ? 'red'
                   : ''
-              "
-              >{{ issue.diffInDate }}</mat-cell
-            >
-            <mat-footer-cell *matFooterCellDef
-              ><strong>{{
+              ">{{ issue.diffInDate }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef><strong>{{
                 timeConvert(selectedUser.diffHour)
-              }}</strong></mat-footer-cell
-            >
+              }}</strong></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="rOutDate">
-            <mat-header-cell *matHeaderCellDef
-              >Hora de salida real</mat-header-cell
-            >
+            <mat-header-cell *matHeaderCellDef>Hora de salida real</mat-header-cell>
             <mat-cell *matCellDef="let issue">{{ issue.rOutDate }}</mat-cell>
             <mat-footer-cell *matFooterCellDef></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="nOutDate">
-            <mat-header-cell *matHeaderCellDef
-              >Hora de salida actualizada</mat-header-cell
-            >
+            <mat-header-cell *matHeaderCellDef>Hora de salida actualizada</mat-header-cell>
             <mat-cell *matCellDef="let issue">{{
               issue.nOutDate === "Invalid date"
                 ? issue.rOutDate
                 : issue.nOutDate
             }}</mat-cell>
-            <mat-footer-cell *matFooterCellDef
-              ><strong>Total final:</strong></mat-footer-cell
-            >
+            <mat-footer-cell *matFooterCellDef><strong>Total final:</strong></mat-footer-cell>
           </ng-container>
           <ng-container matColumnDef="diffOutDate">
-            <mat-header-cell *matHeaderCellDef
-              >Diferencia salida</mat-header-cell
-            >
-            <mat-cell
-              *matCellDef="let issue"
-              [ngClass]="
+            <mat-header-cell *matHeaderCellDef>Diferencia salida</mat-header-cell>
+            <mat-cell *matCellDef="let issue" [ngClass]="
                 issue.diffOutDate > 0
                   ? 'green'
                   : issue.diffOutDate < 0
                   ? 'red'
                   : ''
-              "
-              >{{ issue.diffOutDate ? issue.diffOutDate : 0 }}</mat-cell
-            ><mat-footer-cell *matFooterCellDef
-              ><strong>{{
+              ">{{ issue.diffOutDate ? issue.diffOutDate : 0 }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef><strong>{{
                 timeConvert(selectedUser.totalHourAfterDiff)
-              }}</strong></mat-footer-cell
-            >
+              }}</strong></mat-footer-cell>
           </ng-container>
 
-          <mat-header-row
-            *matHeaderRowDef="displayedColumnsIssue; sticky: true"
-          ></mat-header-row>
-          <mat-row
-            *matRowDef="let row; columns: displayedColumnsIssue"
-          ></mat-row>
-          <mat-footer-row
-            *matFooterRowDef="displayedColumnsIssue; sticky: true"
-          ></mat-footer-row>
+          <mat-header-row *matHeaderRowDef="displayedColumnsIssue; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumnsIssue"></mat-row>
+          <mat-footer-row *matFooterRowDef="displayedColumnsIssue; sticky: true"></mat-footer-row>
+        </mat-table>
+      </div>
+    </mat-card>
+    <br />
+    <mat-card [class.mat-elevation-z24]="true" *ngIf="selectedUser !== undefined">
+      <mat-card-title>Fichajes manuales</mat-card-title>
+      <div *ngIf="
+          selectedUser.manualClocks === undefined || selectedUser.manualClocks?.length == 0
+        ">
+        <h4>Este usuario no tiene fichajes manuales entre estas fechas</h4>
+      </div>
+      <div *ngIf="selectedUser.manualClocks?.length > 0" class="table-container">
+        <div #manualTable hidden>
+          <table mat-table class="clockTable" [dataSource]="dataSourceManual">
+            <ng-container matColumnDef="id">
+              <mat-header-cell *matHeaderCellDef>Identificador</mat-header-cell>
+              <mat-cell *matCellDef="let manualClock">{{ manualClock.id }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef><strong>Tiempo de fichajes manuales:</strong></mat-footer-cell>
+            </ng-container>
+            <ng-container matColumnDef="text">
+              <mat-header-cell *matHeaderCellDef>Texto</mat-header-cell>
+              <mat-cell *matCellDef="let manualClock">
+                <div style="max-height: 100px; overflow: auto;">
+                  <p>{{ manualClock.text }}</p>
+                </div>
+              </mat-cell>
+              <mat-footer-cell *matFooterCellDef><strong>{{ timeConvert(selectedUser.diffHourManual) }}</strong>
+              </mat-footer-cell>
+            </ng-container>
+            <ng-container matColumnDef="inDate">
+              <mat-header-cell *matHeaderCellDef>Hora de entrada</mat-header-cell>
+              <mat-cell *matCellDef="let manualClock">{{ manualClock.inDate }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef><strong>Total final:</strong></mat-footer-cell>
+            </ng-container>
+            <ng-container matColumnDef="outDate">
+              <mat-header-cell *matHeaderCellDef>Hora de salida</mat-header-cell>
+              <mat-cell *matCellDef="let manualClock">{{ manualClock.outDate }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef><strong>{{ timeConvert(selectedUser.totalHourAfterManual) }}</strong>
+              </mat-footer-cell>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumnsManual; sticky: true"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumnsManual"></tr>
+            <tr mat-footer-row *matFooterRowDef="displayedColumnsManual; sticky: true"></tr>
+          </table>
+        </div>
+        <mat-table class="clockTable" [dataSource]="dataSourceManual">
+          <ng-container matColumnDef="id">
+            <mat-header-cell *matHeaderCellDef>Identificador</mat-header-cell>
+            <mat-cell *matCellDef="let manualClock">{{ manualClock.id }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef><strong>Tiempo de fichajes manuales:</strong></mat-footer-cell>
+          </ng-container>
+          <ng-container matColumnDef="text">
+            <mat-header-cell *matHeaderCellDef>Texto</mat-header-cell>
+            <mat-cell *matCellDef="let manualClock">
+              <div style="max-height: 100px; overflow: auto;">
+                <p>{{ manualClock.text }}</p>
+              </div>
+            </mat-cell>
+            <mat-footer-cell *matFooterCellDef><strong>{{ timeConvert(selectedUser.diffHourManual) }}</strong>
+            </mat-footer-cell>
+          </ng-container>
+          <ng-container matColumnDef="inDate">
+            <mat-header-cell *matHeaderCellDef>Hora de entrada</mat-header-cell>
+            <mat-cell *matCellDef="let manualClock">{{ manualClock.inDate }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef><strong>Total final:</strong></mat-footer-cell>
+          </ng-container>
+          <ng-container matColumnDef="outDate">
+            <mat-header-cell *matHeaderCellDef>Hora de salida</mat-header-cell>
+            <mat-cell *matCellDef="let manualClock">{{ manualClock.outDate }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef><strong>{{ timeConvert(selectedUser.totalHourAfterManual) }}</strong></mat-footer-cell>
+          </ng-container>
+          <mat-header-row *matHeaderRowDef="displayedColumnsManual; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumnsManual"></mat-row>
+          <mat-footer-row *matFooterRowDef="displayedColumnsManual; sticky: true"></mat-footer-row>
         </mat-table>
       </div>
     </mat-card>

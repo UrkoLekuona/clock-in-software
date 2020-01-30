@@ -46,6 +46,13 @@ export interface Issue {
   diffOutDate: number;
 }
 
+export interface ManualClock {
+  id: number;
+  text: string;
+  inDate: string;
+  outDate: string;
+}
+
 export interface User {
   username: string;
   displayName?: string;
@@ -54,6 +61,9 @@ export interface User {
   issues?: Issue[];
   diffHour?: number;
   totalHourAfterDiff?: number;
+  manualClocks?: ManualClock[];
+  diffHourManual?: number;
+  totalHourAfterManual?: number;
 }
 
 @Component({
@@ -79,6 +89,7 @@ export class AdminHomeComponent implements OnInit {
   @ViewChild("exporter", { static: false }) exporter: any;
   @ViewChild("clockTable", { static: false }) clockTable: ElementRef;
   @ViewChild("issueTable", { static: false }) issueTable: ElementRef;
+  @ViewChild("manualTable", { static: false }) manualTable: ElementRef;
   @ViewChild(MatPaginator, { static: false }) set matPaginator(
     mp: MatPaginator
   ) {
@@ -88,7 +99,8 @@ export class AdminHomeComponent implements OnInit {
   }
   @ViewChild(MatSort, { static: false }) set matSort(ms: MatSort) {
     this.sort = ms;
-    if (this.sort && this.dataSourceClock) this.dataSourceClock.sort = this.sort;
+    if (this.sort && this.dataSourceClock)
+      this.dataSourceClock.sort = this.sort;
   }
 
   public displayedColumnsClock = [
@@ -114,6 +126,8 @@ export class AdminHomeComponent implements OnInit {
     "delete"
   ];
   public dataSourceIssue: MatTableDataSource<Issue>;
+  public displayedColumnsManual = ["id", "text", "inDate", "outDate", "delete"];
+  public dataSourceManual: MatTableDataSource<ManualClock>;
 
   constructor(
     private network: NetworkService,
@@ -188,12 +202,14 @@ export class AdminHomeComponent implements OnInit {
       value["user"] = this.selectedUser.username;
       this.network.clocksBetweenDates(value).subscribe(
         data => {
+          console.log(data);
           const aux: any = data;
           this.selectedUser = {
             username: this.selectedUser.username,
             displayName: this.selectedUser.displayName,
             clocks: aux.body.clocks,
-            issues: aux.body.issues
+            issues: aux.body.issues,
+            manualClocks: aux.body.manualClocks
           };
           this.dataSourceClock = new MatTableDataSource<Clock>(
             this.selectedUser.clocks
@@ -201,19 +217,22 @@ export class AdminHomeComponent implements OnInit {
           this.dataSourceIssue = new MatTableDataSource<Issue>(
             this.selectedUser.issues
           );
+          this.dataSourceManual = new MatTableDataSource<ManualClock>(
+            this.selectedUser.manualClocks
+          );
           let totalHour = 0;
           this.selectedUser.clocks.forEach(clock => {
             try {
               let ip1 = new Address6(clock.inIp);
               clock.inIp = ip1.to4().address;
             } catch {
-              clock.inIp = '0.0.0.0';
+              clock.inIp = "0.0.0.0";
             }
             try {
               let ip2 = new Address6(clock.outIp);
               clock.outIp = ip2.to4().address;
             } catch {
-              clock.outIp = '0.0.0.0';
+              clock.outIp = "0.0.0.0";
             }
             if (
               !clock.inDate.includes("Invalid") &&
@@ -235,9 +254,18 @@ export class AdminHomeComponent implements OnInit {
           this.selectedUser.issues.forEach(issue => {
             diffHour += issue.diffInDate + issue.diffOutDate;
           });
+          let manualHour = 0;
+          this.selectedUser.manualClocks.forEach(manualClock => {
+            let d1 = moment(manualClock.inDate, "DD/MM/YYYY HH:mm:ss", true);
+            let d2 = moment(manualClock.outDate, "DD/MM/YYYY HH:mm:ss", true);
+            manualHour += d2.diff(d1, "minutes");
+          });
           this.selectedUser.totalHour = totalHour;
           this.selectedUser.diffHour = diffHour;
           this.selectedUser.totalHourAfterDiff = totalHour + diffHour;
+          this.selectedUser.diffHourManual = manualHour;
+          this.selectedUser.totalHourAfterManual =
+            this.selectedUser.totalHourAfterDiff + manualHour;
           this.dataSourceClock.paginator = this.paginator;
         },
         error => {
@@ -284,6 +312,14 @@ export class AdminHomeComponent implements OnInit {
         this.delete_col(ws2, this.displayedColumnsIssue.length - 1);
         XLSX.utils.book_append_sheet(wb, ws2, "Incidencias");
       }
+      if (this.manualTable) {
+        const ws3: XLSX.WorkSheet = XLSX.utils.table_to_sheet(
+          this.manualTable.nativeElement,
+          { raw: true }
+        );
+        this.delete_col(ws3, this.displayedColumnsManual.length - 1);
+        XLSX.utils.book_append_sheet(wb, ws3, "Fichajes Manuales");
+      }
       let iD = moment(this.clockDatesForm.get("clock_since").value).format(
         "DD-MM-YYYY"
       );
@@ -310,7 +346,7 @@ export class AdminHomeComponent implements OnInit {
   }
 
   pad(num, size) {
-    var s = num+"";
+    var s = num + "";
     while (s.length < size) s = "0" + s;
     return s;
   }
@@ -321,7 +357,9 @@ export class AdminHomeComponent implements OnInit {
     let rhours = hours >= 0 ? Math.floor(hours) : Math.ceil(hours);
     let minutes = num % 60;
     let rminutes = Math.round(minutes);
-    return this.pad(rhours, 2) + " horas y " + this.pad(rminutes, 2) + " minutos";
+    return (
+      this.pad(rhours, 2) + " horas y " + this.pad(rminutes, 2) + " minutos"
+    );
   }
 
   insertIntoDailyArray(clock) {
@@ -398,6 +436,49 @@ export class AdminHomeComponent implements OnInit {
               this.errorService
                 .error(error, {
                   400: "El identificador de la incidencia no es válido.",
+                  401: "Acceso denegado. La sesión ha expirado.",
+                  500: "Fallo del servidor. Contacte con un administrador."
+                })
+                .then(res => {
+                  if (error.status == 401) {
+                    this.userService.logout();
+                    this.router.navigate(["/login"]);
+                  }
+                });
+            }
+          );
+        }
+      });
+  }
+
+  deleteManual(manual) {
+    this.alert
+      .fire({
+        title: "¿Borrar fichaje manual?",
+        text: "Si lo borras, no se podrá recuperar. ¿Deseas seguir adelante?",
+        type: "question",
+        showCancelButton: true,
+        cancelButtonText: "Cancelar"
+      })
+      .then(res => {
+        if (res.value) {
+          this.network.deleteManual(manual.id).subscribe(
+            data => {
+              this.clocksBetweenDates(this.clockDatesForm.value);
+              Swal.fire({
+                title: "Fichjae eliminado correctamente",
+                type: "success",
+                toast: true,
+                position: "bottom",
+                showConfirmButton: false,
+                timer: 3000
+              });
+            },
+            error => {
+              console.log(error);
+              this.errorService
+                .error(error, {
+                  400: "El identificador del fichaje no es válido.",
                   401: "Acceso denegado. La sesión ha expirado.",
                   500: "Fallo del servidor. Contacte con un administrador."
                 })

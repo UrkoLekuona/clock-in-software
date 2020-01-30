@@ -122,7 +122,9 @@
                 >
               </ng-container>
               <ng-container matColumnDef="todayHours">
-                <mat-header-cell *matHeaderCellDef>Horas diarias</mat-header-cell>
+                <mat-header-cell *matHeaderCellDef
+                  >Horas diarias</mat-header-cell
+                >
                 <mat-cell *matCellDef="let clock">{{
                   clock.todayHours
                 }}</mat-cell>
@@ -155,19 +157,25 @@
               ></tr>
             </table>
           </div>
-          <mat-table class="clockTable" matSort matSortActive="inDate" [dataSource]="dataSourceClock">
+          <mat-table class="clockTable" matSort [dataSource]="dataSourceClock">
             <ng-container matColumnDef="id">
-              <mat-header-cell *matHeaderCellDef mat-sort-header>Identificador</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header
+                >Identificador</mat-header-cell
+              >
               <mat-cell *matCellDef="let clock">{{ clock.id }}</mat-cell>
               <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="inDate">
-              <mat-header-cell *matHeaderCellDef mat-sort-header>Fecha entrada</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header
+                >Fecha entrada</mat-header-cell
+              >
               <mat-cell *matCellDef="let clock">{{ clock.inDate }}</mat-cell>
               <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="inIp">
-              <mat-header-cell *matHeaderCellDef mat-sort-header>IP entrada</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header
+                >IP entrada</mat-header-cell
+              >
               <mat-cell
                 *matCellDef="let clock"
                 [ngClass]="
@@ -181,12 +189,16 @@
               <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="outDate">
-              <mat-header-cell *matHeaderCellDef mat-sort-header>Fecha salida</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header
+                >Fecha salida</mat-header-cell
+              >
               <mat-cell *matCellDef="let clock">{{ clock.outDate }}</mat-cell>
               <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="outIp">
-              <mat-header-cell *matHeaderCellDef mat-sort-header>IP salida</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header
+                >IP salida</mat-header-cell
+              >
               <mat-cell
                 *matCellDef="let clock"
                 [ngClass]="
@@ -200,7 +212,9 @@
               <mat-footer-cell *matFooterCellDef></mat-footer-cell>
             </ng-container>
             <ng-container matColumnDef="todayHours">
-              <mat-header-cell *matHeaderCellDef mat-sort-header>Horas diarias</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header
+                >Horas diarias</mat-header-cell
+              >
               <mat-cell *matCellDef="let clock">{{
                 clock.todayHours
               }}</mat-cell>
@@ -343,7 +357,7 @@
                   : issue.nOutDate
               }}</mat-cell>
               <mat-footer-cell *matFooterCellDef
-                ><strong>Total final:</strong></mat-footer-cell
+                ><strong>Total con incidencias:</strong></mat-footer-cell
               >
             </ng-container>
             <ng-container matColumnDef="diffOutDate">
@@ -477,7 +491,7 @@
                 : issue.nOutDate
             }}</mat-cell>
             <mat-footer-cell *matFooterCellDef
-              ><strong>Total final:</strong></mat-footer-cell
+              ><strong>Total con incidencias:</strong></mat-footer-cell
             >
           </ng-container>
           <ng-container matColumnDef="diffOutDate">
@@ -518,6 +532,135 @@
           ></mat-row>
           <mat-footer-row
             *matFooterRowDef="displayedColumnsIssue; sticky: true"
+          ></mat-footer-row>
+        </mat-table>
+      </div>
+    </mat-card>
+    <br />
+    <mat-card
+      [class.mat-elevation-z24]="true"
+      *ngIf="selectedUser !== undefined"
+    >
+      <mat-card-title>Fichajes manuales</mat-card-title>
+      <div
+        *ngIf="
+          selectedUser.manualClocks === undefined || selectedUser.manualClocks?.length == 0
+        "
+      >
+        <h4>Este usuario no tiene fichajes manuales entre estas fechas</h4>
+      </div>
+      <div *ngIf="selectedUser.manualClocks?.length > 0" class="table-container">
+        <div #manualTable hidden>
+          <table mat-table class="clockTable" [dataSource]="dataSourceManual">
+            <ng-container matColumnDef="id">
+              <mat-header-cell *matHeaderCellDef>Identificador</mat-header-cell>
+              <mat-cell *matCellDef="let manualClock">{{ manualClock.id }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef><strong>Tiempo de fichajes manuales:</strong></mat-footer-cell>
+            </ng-container>
+            <ng-container matColumnDef="text">
+              <mat-header-cell *matHeaderCellDef
+                >Texto</mat-header-cell
+              >
+              <mat-cell *matCellDef="let manualClock">
+                <div style="max-height: 100px; overflow: auto;">
+                  <p>{{ manualClock.text }}</p>
+                </div>
+              </mat-cell>
+              <mat-footer-cell *matFooterCellDef
+                ><strong>{{ timeConvert(selectedUser.diffHourManual) }}</strong></mat-footer-cell
+              >
+            </ng-container>
+            <ng-container matColumnDef="inDate">
+              <mat-header-cell *matHeaderCellDef
+                >Hora de entrada</mat-header-cell
+              >
+              <mat-cell *matCellDef="let manualClock">{{ manualClock.inDate }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef><strong>Total final:</strong></mat-footer-cell>
+            </ng-container>
+            <ng-container matColumnDef="outDate">
+              <mat-header-cell *matHeaderCellDef
+                >Hora de salida</mat-header-cell
+              >
+              <mat-cell *matCellDef="let manualClock">{{ manualClock.outDate }}</mat-cell>
+              <mat-footer-cell *matFooterCellDef><strong>{{ timeConvert(selectedUser.totalHourAfterManual) }}</strong></mat-footer-cell>
+            </ng-container>
+            <ng-container matColumnDef="delete">
+              <mat-header-cell *matHeaderCellDef
+                >Borrar fichaje</mat-header-cell
+              >
+              <mat-cell *matCellDef="let issue"
+                ><button mat-icon-button (click)="delete(issue)">
+                  <mat-icon class="mat-18">delete</mat-icon>
+                </button></mat-cell
+              ><mat-footer-cell *matFooterCellDef></mat-footer-cell>
+            </ng-container>
+            <tr
+              mat-header-row
+              *matHeaderRowDef="displayedColumnsManual; sticky: true"
+            ></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: displayedColumnsManual"
+            ></tr>
+            <tr
+              mat-footer-row
+              *matFooterRowDef="displayedColumnsManual; sticky: true"
+            ></tr>
+          </table>
+        </div>
+        <mat-table class="clockTable" [dataSource]="dataSourceManual">
+          <ng-container matColumnDef="id">
+            <mat-header-cell *matHeaderCellDef>Identificador</mat-header-cell>
+            <mat-cell *matCellDef="let manualClock">{{ manualClock.id }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef><strong>Tiempo de fichajes manuales:</strong></mat-footer-cell>
+          </ng-container>
+          <ng-container matColumnDef="text">
+            <mat-header-cell *matHeaderCellDef
+              >Texto</mat-header-cell
+            >
+            <mat-cell *matCellDef="let manualClock">
+              <div style="max-height: 100px; overflow: auto;">
+                <p>{{ manualClock.text }}</p>
+              </div>
+            </mat-cell>
+            <mat-footer-cell *matFooterCellDef
+              ><strong>{{ timeConvert(selectedUser.diffHourManual) }}</strong></mat-footer-cell
+            >
+          </ng-container>
+          <ng-container matColumnDef="inDate">
+            <mat-header-cell *matHeaderCellDef
+              >Hora de entrada</mat-header-cell
+            >
+            <mat-cell *matCellDef="let manualClock">{{ manualClock.inDate }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef></mat-footer-cell>
+          </ng-container>
+          <ng-container matColumnDef="outDate">
+            <mat-header-cell *matHeaderCellDef
+              >Hora de salida</mat-header-cell
+            >
+            <mat-cell *matCellDef="let manualClock">{{ manualClock.outDate }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef><strong>Total final:</strong></mat-footer-cell>
+          </ng-container>
+          <ng-container matColumnDef="delete">
+            <mat-header-cell *matHeaderCellDef
+              >Borrar fichaje</mat-header-cell
+            >
+            <mat-cell *matCellDef="let manualClock"
+              ><button mat-icon-button (click)="deleteManual(manualClock)">
+                <mat-icon class="mat-18">delete</mat-icon>
+              </button></mat-cell
+            ><mat-footer-cell *matFooterCellDef>
+              <strong>{{ timeConvert(selectedUser.totalHourAfterManual) }}</strong>
+            </mat-footer-cell>
+          </ng-container>
+          <mat-header-row
+            *matHeaderRowDef="displayedColumnsManual; sticky: true"
+          ></mat-header-row>
+          <mat-row
+            *matRowDef="let row; columns: displayedColumnsManual"
+          ></mat-row>
+          <mat-footer-row
+            *matFooterRowDef="displayedColumnsManual; sticky: true"
           ></mat-footer-row>
         </mat-table>
       </div>
