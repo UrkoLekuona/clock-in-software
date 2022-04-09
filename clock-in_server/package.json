@@ -22,7 +22,7 @@
     "file-system": "^2.2.2",
     "jsonwebtoken": "^8.5.1",
     "mariadb": "^2.1.5",
-    "moment": "^2.24.0",
+    "moment": "^2.29.2",
     "nodemailer": "^6.4.2",
     "passport": "^0.4.1",
     "passport-ldapauth": "^2.1.3"
