@@ -27,7 +27,7 @@
     "ip-address": "^6.1.0",
     "jwt-decode": "^2.2.0",
     "mat-table-exporter": "^1.2.2",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "ngx-material-timepicker": "^5.2.1",
     "rxjs": "~6.4.0",
     "sweetalert2": "^8.18.6",
